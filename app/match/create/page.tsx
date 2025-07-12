@@ -110,131 +110,215 @@ export default function CreateMatchPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-emerald-600 rounded-full flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <p className="text-gray-600 font-medium">Setting up match creation...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Create Match</h1>
-            <Link 
-              href="/dashboard"
-              className="text-indigo-600 hover:text-indigo-500 font-medium"
+      {/* Mobile Header */}
+      <header className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Back Button */}
+            <button
+              onClick={() => router.back()}
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
             >
-              ← Back to Dashboard
-            </Link>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="font-medium">Back</span>
+            </button>
+
+            {/* Balance */}
+            <div className="bg-emerald-100 text-emerald-800 rounded-full px-3 py-1 text-sm font-semibold">
+              ₹ {user.balance}
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {/* Current Balance */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-2">Available Balance</h2>
-          <p className="text-3xl font-bold text-green-600">{user.balance} Coins</p>
+      {/* Main Content */}
+      <main className="px-4 py-6 space-y-6">
+        {/* Header Section */}
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-bold text-gray-900">Create New Match</h1>
+          <p className="text-gray-600">Set up your game and wait for opponents</p>
         </div>
 
-        {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-medium text-blue-900 mb-4">How It Works</h3>
-          <ul className="space-y-2 text-sm text-blue-800">
-            <li>• Create a room in Ludo King app</li>
-            <li>• Enter the room code here along with entry fee</li>
-            <li>• Wait for another player to join your match</li>
-            <li>• Play the game in Ludo King</li>
-            <li>• Both players submit win/loss result</li>
-            <li>• Winner gets 90% of total pot, platform keeps 10%</li>
-          </ul>
+        {/* Quick Instructions */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="flex items-start space-x-3">
+            <span className="text-2xl">ℹ️</span>
+            <div>
+              <h3 className="font-semibold text-blue-900 mb-2">Quick Setup Guide</h3>
+              <div className="space-y-1 text-sm text-blue-800">
+                <p>1. Open Ludo King & create a room</p>
+                <p>2. Copy the room code here</p>
+                <p>3. Set your entry fee & create match</p>
+                <p>4. Share with friends or wait for players</p>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Success Message */}
+        {success && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-green-500">✅</span>
+              <span className="text-green-700 font-medium">{success}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-red-500">⚠️</span>
+              <span className="text-red-700 font-medium">{error}</span>
+            </div>
+          </div>
+        )}
 
         {/* Create Match Form */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Match</h3>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
+            {/* Room Code Input */}
             <div>
-              <label htmlFor="entryFee" className="block text-sm font-medium text-gray-700">
-                Entry Fee (Coins)
-              </label>
-              <input
-                type="number"
-                id="entryFee"
-                min="1"
-                max={user.balance}
-                step="1"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Enter coins to bet"
-                value={entryFee}
-                onChange={(e) => setEntryFee(e.target.value)}
-              />
-              <p className="mt-1 text-sm text-gray-500">
-                Total pot will be {entryFee ? parseInt(entryFee) * 2 : 0} coins
-              </p>
-            </div>
-
-            <div>
-              <label htmlFor="roomCode" className="block text-sm font-medium text-gray-700">
-                Ludo King Room Code
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                🎮 Room Code
               </label>
               <input
                 type="text"
-                id="roomCode"
-                required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Enter room code from Ludo King"
                 value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value)}
+                onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                placeholder="Enter Ludo King room code"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-mono text-center"
+                required
+                maxLength={6}
               />
-              <p className="mt-1 text-sm text-gray-500">
-                Create a room in Ludo King and enter the code here
+              <p className="mt-1 text-xs text-gray-500">
+                Copy the room code from Ludo King app
               </p>
             </div>
 
-            {error && (
-              <div className="text-red-600 text-sm">
-                {error}
+            {/* Entry Fee Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                💰 Entry Fee
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg">₹</span>
+                <input
+                  type="number"
+                  value={entryFee}
+                  onChange={(e) => setEntryFee(e.target.value)}
+                  placeholder="0"
+                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg"
+                  required
+                  min="1"
+                  max={user.balance}
+                />
+              </div>
+              <div className="mt-2 flex justify-between text-sm">
+                <span className="text-gray-500">Min: ₹1</span>
+                <span className="text-gray-500">Available: ₹{user.balance}</span>
+              </div>
+            </div>
+
+            {/* Match Preview */}
+            {entryFee && parseInt(entryFee) > 0 && (
+              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                <h4 className="font-medium text-gray-900">Match Preview</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-500">Total Pot:</span>
+                    <span className="ml-2 font-semibold">₹{parseInt(entryFee) * 2}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Winner Gets:</span>
+                    <span className="ml-2 font-semibold text-green-600">
+                      ₹{Math.floor((parseInt(entryFee) * 2) * 0.9)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Platform Fee:</span>
+                    <span className="ml-2 text-gray-600">₹{Math.floor((parseInt(entryFee) * 2) * 0.1)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Your Cost:</span>
+                    <span className="ml-2 font-semibold text-red-600">₹{entryFee}</span>
+                  </div>
+                </div>
               </div>
             )}
+          </div>
 
-            {success && (
-              <div className="text-green-600 text-sm">
-                {success}
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading || !entryFee || !roomCode || parseInt(entryFee) > user.balance}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white text-lg font-semibold py-4 rounded-xl transition-all duration-200 active:scale-95 disabled:active:scale-100"
+          >
+            {loading ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Creating Match...</span>
               </div>
+            ) : (
+              '🚀 Create Match'
             )}
+          </button>
+        </form>
 
-            <button
-              type="submit"
-              disabled={loading || !entryFee || !roomCode || parseInt(entryFee) > user.balance}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        {/* Quick Entry Fee Options */}
+        <div className="bg-white rounded-xl shadow-sm p-4">
+          <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Select</h3>
+          <div className="grid grid-cols-4 gap-2">
+            {[10, 25, 50, 100].filter(amount => amount <= user.balance).map((amount) => (
+              <button
+                key={amount}
+                type="button"
+                onClick={() => setEntryFee(amount.toString())}
+                className="p-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                ₹{amount}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Insufficient Balance Warning */}
+        {user.balance < 10 && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <span className="text-yellow-500">⚠️</span>
+              <span className="text-yellow-800 font-medium">Low Balance</span>
+            </div>
+            <p className="text-sm text-yellow-700 mb-3">
+              You need more coins to create matches. Add coins to get started!
+            </p>
+            <Link
+              href="/wallet/deposit"
+              className="inline-flex items-center bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
             >
-              {loading ? 'Creating...' : 'Create Match'}
-            </button>
-          </form>
-        </div>
+              💰 Add Coins
+            </Link>
+          </div>
+        )}
 
-        {/* Navigation */}
-        <div className="mt-6 flex justify-center space-x-4">
-          <Link
-            href="/match/browse"
-            className="text-indigo-600 hover:text-indigo-500 font-medium"
-          >
-            Browse Matches
-          </Link>
-          <span className="text-gray-300">|</span>
-          <Link
-            href="/match/history"
-            className="text-indigo-600 hover:text-indigo-500 font-medium"
-          >
-            Match History
-          </Link>
-        </div>
+        {/* Bottom Padding */}
+        <div className="h-8"></div>
       </main>
     </div>
   );

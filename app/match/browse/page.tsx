@@ -33,6 +33,7 @@ export default function BrowseMatchesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [joiningMatch, setJoiningMatch] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export default function BrowseMatchesPage() {
 
   const fetchMatches = async () => {
     try {
+      setRefreshing(true);
       const token = localStorage.getItem('authToken');
       const response = await fetch('/api/match/browse', {
         headers: {
@@ -81,7 +83,21 @@ export default function BrowseMatchesPage() {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
   };
 
   const handleJoinMatch = async (matchId: string, entryFee: number) => {
@@ -130,150 +146,210 @@ export default function BrowseMatchesPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-emerald-600 rounded-full flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <p className="text-gray-600 font-medium">Loading matches...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Browse Matches</h1>
-            <Link 
-              href="/dashboard"
-              className="text-indigo-600 hover:text-indigo-500 font-medium"
+      {/* Mobile Header */}
+      <header className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Back Button */}
+            <button
+              onClick={() => router.back()}
+              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
             >
-              ← Back to Dashboard
-            </Link>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="font-medium">Back</span>
+            </button>
+
+            {/* Balance & Refresh */}
+            <div className="flex items-center space-x-3">
+              <div className="bg-emerald-100 text-emerald-800 rounded-full px-3 py-1 text-sm font-semibold">
+                ₹ {user.balance}
+              </div>
+              <button
+                onClick={fetchMatches}
+                disabled={refreshing}
+                className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+              >
+                <svg className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        {/* Current Balance */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-2">Available Balance</h2>
-          <p className="text-3xl font-bold text-green-600">{user.balance} Coins</p>
+      {/* Main Content */}
+      <main className="px-4 py-6 space-y-6">
+        {/* Header Section */}
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-bold text-gray-900">Available Matches</h1>
+          <p className="text-gray-600">Join a match and start playing!</p>
         </div>
 
-        {/* Available Matches */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">Available Matches</h3>
-              <button
-                onClick={fetchMatches}
-                className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
-              >
-                Refresh
-              </button>
+        {/* Quick Create Button */}
+        <Link
+          href="/match/create"
+          className="block w-full bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-semibold rounded-xl py-3 text-center transition-all duration-200 active:scale-95"
+        >
+          ✨ Create New Match
+        </Link>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-red-500">⚠️</span>
+              <span className="text-red-700 text-sm font-medium">{error}</span>
             </div>
           </div>
+        )}
 
+        {/* Matches List */}
+        <div className="space-y-4">
           {loading ? (
-            <div className="p-6 text-center">
-              <div className="text-gray-600">Loading matches...</div>
-            </div>
-          ) : error ? (
-            <div className="p-6 text-center">
-              <div className="text-red-600">{error}</div>
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="bg-white rounded-xl shadow-sm p-4 animate-pulse">
+                  <div className="flex justify-between items-center">
+                    <div className="space-y-2">
+                      <div className="h-5 bg-gray-200 rounded w-32"></div>
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                      <div className="h-3 bg-gray-200 rounded w-20"></div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="h-6 bg-gray-200 rounded w-16"></div>
+                      <div className="h-8 bg-gray-200 rounded-lg w-20"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : matches.length === 0 ? (
-            <div className="p-6 text-center">
-              <div className="text-gray-500">No matches available</div>
+            <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <span className="text-3xl">🎯</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Active Matches</h3>
+              <p className="text-gray-500 mb-4">Be the first to create a match and get the game started!</p>
               <Link
                 href="/match/create"
-                className="mt-2 inline-block text-indigo-600 hover:text-indigo-500 font-medium"
+                className="inline-flex items-center bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
               >
-                Create a match
+                🚀 Create Match
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="space-y-3">
               {matches.map((match) => (
-                <div key={match.id} className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex-shrink-0">
-                          <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center">
-                            <span className="text-white font-medium text-sm">
-                              {match.player1.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-lg font-medium text-gray-900">
-                            {match.player1.name}
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            Room: {match.roomCode}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Created: {new Date(match.createdAt).toLocaleDateString('en-IN', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </p>
-                        </div>
+                <div key={match.id} className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">
+                          {match.player1.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{match.player1.name}</h3>
+                        <p className="text-sm text-gray-500">{formatTimeAgo(match.createdAt)}</p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-gray-900">
-                          {match.entryFee} coins
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          Total pot: {match.pot} coins
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          Winner gets: {match.pot - Math.floor(match.pot * 0.1)} coins
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleJoinMatch(match.id, match.entryFee)}
-                        disabled={joiningMatch === match.id || user.balance < match.entryFee}
-                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {joiningMatch === match.id ? 'Joining...' : 'Join Match'}
-                      </button>
+                    
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-gray-900">₹{match.entryFee}</div>
+                      <div className="text-xs text-gray-500">Entry Fee</div>
                     </div>
                   </div>
-                  
-                  {user.balance < match.entryFee && (
-                    <div className="mt-3 text-sm text-red-600">
-                      Insufficient balance to join this match
+
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-4 text-sm text-gray-600">
+                      <div className="flex items-center space-x-1">
+                        <span>🏆</span>
+                        <span>₹{Math.floor(match.pot * 0.9)}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span>🎮</span>
+                        <span className="font-mono">{match.roomCode}</span>
+                      </div>
                     </div>
-                  )}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    {user.balance < match.entryFee ? (
+                      <div className="flex-1 text-center">
+                        <div className="text-sm text-red-600 font-medium mb-2">
+                          Insufficient Balance
+                        </div>
+                        <Link
+                          href="/wallet/deposit"
+                          className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                          Add Coins →
+                        </Link>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleJoinMatch(match.id, match.entryFee)}
+                        disabled={joiningMatch === match.id}
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-all duration-200 active:scale-95 disabled:active:scale-100"
+                      >
+                        {joiningMatch === match.id ? (
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Joining...</span>
+                          </div>
+                        ) : (
+                          '🎯 Join Match'
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Navigation */}
-        <div className="mt-6 flex justify-center space-x-4">
-          <Link
-            href="/match/create"
-            className="text-indigo-600 hover:text-indigo-500 font-medium"
-          >
-            Create Match
-          </Link>
-          <span className="text-gray-300">|</span>
-          <Link
-            href="/match/history"
-            className="text-indigo-600 hover:text-indigo-500 font-medium"
-          >
-            Match History
-          </Link>
-        </div>
+        {/* Quick Links */}
+        {matches.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm p-4">
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Links</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <Link
+                href="/match/history"
+                className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <span className="text-lg">📊</span>
+                <span className="text-sm font-medium text-gray-700">My History</span>
+              </Link>
+              <Link
+                href="/leaderboard"
+                className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <span className="text-lg">🏆</span>
+                <span className="text-sm font-medium text-gray-700">Leaderboard</span>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom Padding */}
+        <div className="h-8"></div>
       </main>
     </div>
   );
