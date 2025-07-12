@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import AdminLayout from '@/components/AdminLayout';
 
@@ -21,7 +21,7 @@ interface Transaction {
   updatedAt: string;
 }
 
-export default function AdminTransactions() {
+function AdminTransactionsContent() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -299,5 +299,19 @@ export default function AdminTransactions() {
         )}
       </div>
     </AdminLayout>
+  );
+}
+
+export default function AdminTransactions() {
+  return (
+    <Suspense fallback={
+      <AdminLayout title="Transactions">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </AdminLayout>
+    }>
+      <AdminTransactionsContent />
+    </Suspense>
   );
 }
