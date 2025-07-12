@@ -3,6 +3,7 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import { generateToken } from '@/lib/jwt';
 import { otpStore } from '@/lib/otpStore';
+import { generateUniqueReferralCode } from '@/lib/referralUtils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,14 +32,25 @@ export async function POST(request: NextRequest) {
     let user = await User.findOne({ phone });
     
     if (!user) {
+      // Generate unique referral code for new user
+      const referralCode = await generateUniqueReferralCode();
+      
       // Create new user
       user = new User({
         name: storedData.name,
         phone: storedData.phone,
         isAdmin: false,
         balance: 0,
+        referralCode,
+        referredBy: storedData.referredBy || undefined,
       });
       await user.save();
+
+      // If user was referred, store the referral relationship
+      if (storedData.referredBy) {
+        console.log(`New user ${user.name} was referred by user ${storedData.referredBy}`);
+        // Note: Referral rewards will be given when this user wins their first match
+      }
     }
 
     // Generate JWT token
@@ -61,6 +73,7 @@ export async function POST(request: NextRequest) {
         phone: user.phone,
         isAdmin: user.isAdmin,
         balance: user.balance,
+        referralCode: user.referralCode,
       },
     });
 

@@ -10,7 +10,7 @@ export interface IMatch extends mongoose.Document {
   player1Result?: 'win' | 'loss';
   player2Result?: 'win' | 'loss';
   winner?: mongoose.Types.ObjectId;
-  status: 'waiting' | 'in-progress' | 'completed' | 'conflict';
+  status: 'waiting' | 'active' | 'in-progress' | 'completed' | 'cancelled' | 'conflict';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,7 +57,7 @@ const MatchSchema = new mongoose.Schema<IMatch>({
   },
   status: {
     type: String,
-    enum: ['waiting', 'in-progress', 'completed', 'conflict'],
+    enum: ['waiting', 'active', 'in-progress', 'completed', 'cancelled', 'conflict'],
     default: 'waiting',
   },
   createdAt: {

@@ -2,12 +2,13 @@ import mongoose from 'mongoose';
 
 export interface ITransaction extends mongoose.Document {
   userId?: mongoose.Types.ObjectId; // Optional for system transactions
-  type: 'deposit' | 'withdrawal';
+  type: 'deposit' | 'withdrawal' | 'referral-reward' | 'match-winning' | 'match-deduction';
   amount: number;
   status: 'pending' | 'approved' | 'rejected';
   proofUrl?: string; // only for deposit
   upiId?: string; // only for withdrawal
   description?: string; // For match transactions, etc.
+  matchId?: mongoose.Types.ObjectId; // For match-related transactions
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,7 +21,7 @@ const TransactionSchema = new mongoose.Schema<ITransaction>({
   },
   type: {
     type: String,
-    enum: ['deposit', 'withdrawal'],
+    enum: ['deposit', 'withdrawal', 'referral-reward', 'match-winning', 'match-deduction'],
     required: [true, 'Transaction type is required'],
   },
   amount: {
@@ -48,6 +49,13 @@ const TransactionSchema = new mongoose.Schema<ITransaction>({
   description: {
     type: String,
     trim: true,
+  },
+  matchId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Match',
+    required: function(this: ITransaction) {
+      return this.type === 'match-winning' || this.type === 'match-deduction';
+    },
   },
   createdAt: {
     type: Date,

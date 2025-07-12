@@ -5,6 +5,8 @@ export interface IUser extends mongoose.Document {
   phone: string;
   isAdmin: boolean;
   balance: number;
+  referralCode: string;
+  referredBy?: mongoose.Types.ObjectId;
   createdAt: Date;
 }
 
@@ -27,6 +29,15 @@ const UserSchema = new mongoose.Schema<IUser>({
   balance: {
     type: Number,
     default: 0,
+  },
+  referralCode: {
+    type: String,
+    unique: true,
+    required: true,
+  },
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
   },
   createdAt: {
     type: Date,

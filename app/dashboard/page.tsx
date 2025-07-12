@@ -172,7 +172,7 @@ export default function DashboardPage() {
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                 Wallet Actions
               </h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
                 <Link
                   href="/wallet/deposit"
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center block"
@@ -191,6 +191,12 @@ export default function DashboardPage() {
                 >
                   History
                 </Link>
+                <Link
+                  href="/referrals"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center block"
+                >
+                  🎁 Referrals
+                </Link>
               </div>
             </div>
           </div>
@@ -201,7 +207,7 @@ export default function DashboardPage() {
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                 Match Actions
               </h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
                 <Link
                   href="/match/create"
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center block"
@@ -219,6 +225,12 @@ export default function DashboardPage() {
                   className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center block"
                 >
                   Match History
+                </Link>
+                <Link
+                  href="/leaderboard"
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center block"
+                >
+                  🏆 Leaderboard
                 </Link>
               </div>
             </div>

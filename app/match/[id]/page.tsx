@@ -19,7 +19,7 @@ interface Match {
   entryFee: number;
   pot: number;
   roomCode: string;
-  status: 'waiting' | 'active' | 'completed' | 'cancelled';
+  status: 'waiting' | 'active' | 'in-progress' | 'completed' | 'cancelled';
   winner?: {
     _id: string;
     name: string;
@@ -65,6 +65,13 @@ export default function MatchPage({ params }: MatchPageProps) {
     try {
       setUser(JSON.parse(userData));
       fetchMatch();
+      
+      // Poll for match updates every 3 seconds for real-time updates
+      const pollInterval = setInterval(() => {
+        fetchMatch();
+      }, 3000);
+
+      return () => clearInterval(pollInterval);
     } catch (error) {
       console.error('Error parsing user data:', error);
       router.push('/auth/login');
@@ -221,7 +228,7 @@ export default function MatchPage({ params }: MatchPageProps) {
 
   const isPlayer = match.player1._id === user.id || match.player2?._id === user.id;
   const canJoin = match.status === 'waiting' && !match.player2 && !isPlayer;
-  const canSubmitResult = match.status === 'active' && isPlayer && !resultSubmitted;
+  const canSubmitResult = (match.status === 'active' || match.status === 'in-progress') && isPlayer && !resultSubmitted;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -247,11 +254,11 @@ export default function MatchPage({ params }: MatchPageProps) {
             <h2 className="text-xl font-bold text-gray-900">Match Status</h2>
             <span className={`px-3 py-1 rounded-full text-sm font-medium ${
               match.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
-              match.status === 'active' ? 'bg-blue-100 text-blue-800' :
+              (match.status === 'active' || match.status === 'in-progress') ? 'bg-blue-100 text-blue-800' :
               match.status === 'completed' ? 'bg-green-100 text-green-800' :
               'bg-red-100 text-red-800'
             }`}>
-              {match.status.charAt(0).toUpperCase() + match.status.slice(1)}
+              {match.status === 'in-progress' ? 'Active' : match.status.charAt(0).toUpperCase() + match.status.slice(1)}
             </span>
           </div>
 

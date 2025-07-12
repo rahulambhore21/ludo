@@ -55,156 +55,150 @@ export async function POST(
       );
     }
 
-    // Process match resolution without MongoDB sessions (for local development)
-    try {
-        let winnerId = null;
-        let winnings = 0;
-        let description = '';
+    let winnerId = null;
+    let winnings = 0;
+    let description = '';
 
-        if (action === 'player1-wins') {
-          winnerId = match.player1._id;
-          winnings = match.pot - match.platformCut;
-          description = `Match resolved by admin: ${match.player1.name} declared winner`;
+    if (action === 'player1-wins') {
+      winnerId = match.player1._id;
+      winnings = match.pot - match.platformCut;
+      description = `Match resolved by admin: ${match.player1.name} declared winner`;
 
-          // Credit winnings to player 1
-          await User.findByIdAndUpdate(
-            match.player1._id,
-            { $inc: { balance: winnings } },
-            { session }
-          );
+      // Credit winnings to player 1
+      await User.findByIdAndUpdate(
+        match.player1._id,
+        { $inc: { balance: winnings } }
+      );
 
-          // Update match
-          await Match.findByIdAndUpdate(
-            matchId,
-            {
-              status: 'completed',
-              winner: match.player1._id,
-              player1Result: 'win',
-              player2Result: 'loss',
-              updatedAt: new Date(),
-            },
-            { session }
-          );
-
-        } else if (action === 'player2-wins') {
-          winnerId = match.player2._id;
-          winnings = match.pot - match.platformCut;
-          description = `Match resolved by admin: ${match.player2.name} declared winner`;
-
-          // Credit winnings to player 2
-          await User.findByIdAndUpdate(
-            match.player2._id,
-            { $inc: { balance: winnings } },
-            { session }
-          );
-
-          // Update match
-          await Match.findByIdAndUpdate(
-            matchId,
-            {
-              status: 'completed',
-              winner: match.player2._id,
-              player1Result: 'loss',
-              player2Result: 'win',
-              updatedAt: new Date(),
-            },
-            { session }
-          );
-
-        } else if (action === 'reject-both') {
-          description = 'Match rejected by admin: Entry fees refunded to both players';
-
-          // Refund entry fee to both players
-          await User.findByIdAndUpdate(
-            match.player1._id,
-            { $inc: { balance: match.entryFee } },
-            { session }
-          );
-
-          await User.findByIdAndUpdate(
-            match.player2._id,
-            { $inc: { balance: match.entryFee } },
-            { session }
-          );
-
-          // Update match
-          await Match.findByIdAndUpdate(
-            matchId,
-            {
-              status: 'cancelled',
-              updatedAt: new Date(),
-            },
-            { session }
-          );
+      // Update match
+      await Match.findByIdAndUpdate(
+        matchId,
+        {
+          status: 'completed',
+          winner: match.player1._id,
+          player1Result: 'win',
+          player2Result: 'loss',
+          updatedAt: new Date(),
         }
+      );
 
-        // Create transaction records for winning/refunding
-        if (action === 'player1-wins' || action === 'player2-wins') {
-          // Record match winnings
-          await Transaction.create([{
-            userId: winnerId,
-            type: 'deposit',
-            amount: winnings,
-            status: 'approved',
-            description: `Match winnings: ${description}`,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          }], { session });
-
-          // Record platform cut (system transaction)
-          await Transaction.create([{
-            type: 'deposit',
-            amount: match.platformCut,
-            status: 'approved',
-            description: `Platform commission from match ${matchId}`,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          }], { session });
-
-        } else if (action === 'reject-both') {
-          // Record refunds
-          await Transaction.create([
-            {
-              userId: match.player1._id,
-              type: 'deposit',
-              amount: match.entryFee,
-              status: 'approved',
-              description: `Refund: ${description}`,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            },
-            {
-              userId: match.player2._id,
-              type: 'deposit',
-              amount: match.entryFee,
-              status: 'approved',
-              description: `Refund: ${description}`,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            }
-          ], { session });
-        }
+      // Record match winnings
+      await Transaction.create({
+        userId: winnerId,
+        type: 'match-winning',
+        amount: winnings,
+        status: 'approved',
+        description: `Match winnings: ${description}`,
+        matchId: matchId,
       });
 
-      // Get updated match
-      const updatedMatch = await Match.findById(matchId)
-        .populate('player1', 'name phone')
-        .populate('player2', 'name phone')
-        .populate('winner', 'name phone')
-        .select('-__v')
-        .lean();
-
-      return NextResponse.json({
-        message: 'Match conflict resolved successfully',
-        match: updatedMatch,
+      // Record platform cut (system transaction)
+      await Transaction.create({
+        type: 'match-deduction',
+        amount: match.platformCut,
+        status: 'approved',
+        description: `Platform commission from match ${matchId}`,
+        matchId: matchId,
       });
 
-    } catch (error) {
-      console.error('Match resolution transaction error:', error);
-      throw error;
-    } finally {
-      await session.endSession();
+    } else if (action === 'player2-wins') {
+      winnerId = match.player2._id;
+      winnings = match.pot - match.platformCut;
+      description = `Match resolved by admin: ${match.player2.name} declared winner`;
+
+      // Credit winnings to player 2
+      await User.findByIdAndUpdate(
+        match.player2._id,
+        { $inc: { balance: winnings } }
+      );
+
+      // Update match
+      await Match.findByIdAndUpdate(
+        matchId,
+        {
+          status: 'completed',
+          winner: match.player2._id,
+          player1Result: 'loss',
+          player2Result: 'win',
+          updatedAt: new Date(),
+        }
+      );
+
+      // Record match winnings
+      await Transaction.create({
+        userId: winnerId,
+        type: 'match-winning',
+        amount: winnings,
+        status: 'approved',
+        description: `Match winnings: ${description}`,
+        matchId: matchId,
+      });
+
+      // Record platform cut (system transaction)
+      await Transaction.create({
+        type: 'match-deduction',
+        amount: match.platformCut,
+        status: 'approved',
+        description: `Platform commission from match ${matchId}`,
+        matchId: matchId,
+      });
+
+    } else if (action === 'reject-both') {
+      description = 'Match rejected by admin: Entry fees refunded to both players';
+
+      // Refund entry fee to both players
+      await User.findByIdAndUpdate(
+        match.player1._id,
+        { $inc: { balance: match.entryFee } }
+      );
+
+      await User.findByIdAndUpdate(
+        match.player2._id,
+        { $inc: { balance: match.entryFee } }
+      );
+
+      // Update match
+      await Match.findByIdAndUpdate(
+        matchId,
+        {
+          status: 'cancelled',
+          updatedAt: new Date(),
+        }
+      );
+
+      // Record refunds
+      await Transaction.create([
+        {
+          userId: match.player1._id,
+          type: 'match-winning',
+          amount: match.entryFee,
+          status: 'approved',
+          description: `Refund: ${description}`,
+          matchId: matchId,
+        },
+        {
+          userId: match.player2._id,
+          type: 'match-winning',
+          amount: match.entryFee,
+          status: 'approved',
+          description: `Refund: ${description}`,
+          matchId: matchId,
+        }
+      ]);
     }
+
+    // Get updated match
+    const updatedMatch = await Match.findById(matchId)
+      .populate('player1', 'name phone')
+      .populate('player2', 'name phone')
+      .populate('winner', 'name phone')
+      .select('-__v')
+      .lean();
+
+    return NextResponse.json({
+      message: 'Match conflict resolved successfully',
+      match: updatedMatch,
+    });
 
   } catch (error) {
     if (error instanceof Error && error.message === 'Unauthorized') {

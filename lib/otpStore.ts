@@ -5,15 +5,16 @@ interface OTPData {
   otp: string;
   phone: string;
   name: string;
+  referredBy?: string; // ObjectId as string
   expiresAt: Date;
 }
 
 class OTPStore {
   private store: Map<string, OTPData> = new Map();
 
-  set(phone: string, otp: string, name: string): void {
+  set(phone: string, otp: string, name: string, referredBy?: string): void {
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-    this.store.set(phone, { otp, phone, name, expiresAt });
+    this.store.set(phone, { otp, phone, name, referredBy, expiresAt });
   }
 
   get(phone: string): OTPData | null {

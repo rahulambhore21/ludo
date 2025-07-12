@@ -48,6 +48,13 @@ export default function BrowseMatchesPage() {
     try {
       setUser(JSON.parse(userData));
       fetchMatches();
+      
+      // Poll for new matches every 5 seconds
+      const pollInterval = setInterval(() => {
+        fetchMatches();
+      }, 5000);
+
+      return () => clearInterval(pollInterval);
     } catch (error) {
       console.error('Error parsing user data:', error);
       router.push('/auth/login');

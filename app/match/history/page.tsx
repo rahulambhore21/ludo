@@ -19,11 +19,13 @@ interface Match {
   entryFee: number;
   pot: number;
   roomCode: string;
-  status: 'waiting' | 'active' | 'completed' | 'cancelled';
+  status: 'waiting' | 'active' | 'in-progress' | 'completed' | 'cancelled' | 'conflict';
   winner?: {
     _id: string;
     name: string;
   };
+  player1Result?: 'win' | 'loss';
+  player2Result?: 'win' | 'loss';
   createdAt: string;
   completedAt?: string;
 }
@@ -51,7 +53,8 @@ export default function MatchHistoryPage() {
   const [stats, setStats] = useState<MatchStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState<'all' | 'completed' | 'active' | 'waiting'>('all');
+  const [filter, setFilter] = useState<'all' | 'completed' | 'active' | 'waiting' | 'conflict'>('all');
+  const [submittingResult, setSubmittingResult] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -97,8 +100,49 @@ export default function MatchHistoryPage() {
     }
   };
 
+  const handleSubmitResult = async (matchId: string, result: 'win' | 'loss') => {
+    if (!user) return;
+
+    setSubmittingResult(matchId);
+    setError('');
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/match/submit-result/${matchId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ result }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit result');
+      }
+
+      // Refresh match history to get updated status
+      await fetchMatchHistory();
+
+      // Update user balance if won
+      if (result === 'win' && data.winnings) {
+        const updatedUser = { ...user, balance: user.balance + data.winnings };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit result');
+    } finally {
+      setSubmittingResult(null);
+    }
+  };
+
   const filteredMatches = matches.filter(match => {
     if (filter === 'all') return true;
+    if (filter === 'active') return match.status === 'active' || match.status === 'in-progress';
     return match.status === filter;
   });
 
@@ -109,14 +153,31 @@ export default function MatchHistoryPage() {
     return match.winner._id === user.id ? 'won' : 'lost';
   };
 
-  const getOpponentName = (match: Match) => {
+  const getOpponentName = (match: Match): string => {
     if (!user) return 'Unknown';
     
     if (match.player1._id === user.id) {
-      return match.player2?.name || 'Waiting...';
+      return match.player2?.name || 'Waiting for player...';
     } else {
       return match.player1.name;
     }
+  };
+
+  const canSubmitResult = (match: Match): boolean => {
+    if (!user) return false;
+    if (match.status !== 'in-progress') return false;
+    
+    // Check if user is part of this match
+    const isPlayer1 = match.player1._id === user.id;
+    const isPlayer2 = match.player2?._id === user.id;
+    
+    if (!isPlayer1 && !isPlayer2) return false;
+    
+    // Check if user hasn't already submitted their result
+    if (isPlayer1 && match.player1Result) return false;
+    if (isPlayer2 && match.player2Result) return false;
+    
+    return true;
   };
 
   if (!user) {
@@ -222,6 +283,16 @@ export default function MatchHistoryPage() {
             >
               Waiting
             </button>
+            <button
+              onClick={() => setFilter('conflict')}
+              className={`px-4 py-2 rounded-md text-sm font-medium ${
+                filter === 'conflict' 
+                  ? 'bg-red-600 text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              ⚠️ Conflicts
+            </button>
           </div>
         </div>
 
@@ -232,6 +303,13 @@ export default function MatchHistoryPage() {
               Your Matches ({filteredMatches.length})
             </h3>
           </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className="text-red-600 text-sm">{error}</div>
+            </div>
+          )}
 
           {loading ? (
             <div className="p-6 text-center">
@@ -263,6 +341,18 @@ export default function MatchHistoryPage() {
                 
                 return (
                   <div key={match._id} className="p-6">
+                    {/* Instructions for active matches */}
+                    {canSubmitResult(match) && (
+                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-blue-600 font-medium">🎮</span>
+                          <span className="text-blue-800 text-sm">
+                            Match is ready! Submit your result after playing with room code: <strong>{match.roomCode}</strong>
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-4">
@@ -275,7 +365,7 @@ export default function MatchHistoryPage() {
                               <span className="text-white font-medium text-sm">
                                 {result === 'won' ? 'W' :
                                  result === 'lost' ? 'L' : 
-                                 match.status === 'active' ? 'A' : 'W'}
+                                 (match.status === 'active' || match.status === 'in-progress') ? 'A' : 'W'}
                               </span>
                             </div>
                           </div>
@@ -288,11 +378,14 @@ export default function MatchHistoryPage() {
                               <span>Entry: {match.entryFee} coins</span>
                               <span className={`px-2 py-1 rounded text-xs ${
                                 match.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
-                                match.status === 'active' ? 'bg-blue-100 text-blue-800' :
+                                (match.status === 'active' || match.status === 'in-progress') ? 'bg-blue-100 text-blue-800' :
                                 match.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                'bg-red-100 text-red-800'
+                                match.status === 'conflict' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
                               }`}>
-                                {match.status}
+                                {match.status === 'conflict' ? '⚠️ CONFLICT' : 
+                                 match.status === 'in-progress' ? 'ACTIVE' : 
+                                 match.status.toUpperCase()}
                               </span>
                             </div>
                             <p className="text-sm text-gray-500">
@@ -334,6 +427,27 @@ export default function MatchHistoryPage() {
                             </div>
                           )}
                         </div>
+                        
+                        {/* Result Submission Buttons for Active Matches */}
+                        {canSubmitResult(match) && (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleSubmitResult(match._id, 'win')}
+                              disabled={submittingResult === match._id}
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-medium disabled:opacity-50"
+                            >
+                              {submittingResult === match._id ? 'Submitting...' : 'I Won'}
+                            </button>
+                            <button
+                              onClick={() => handleSubmitResult(match._id, 'loss')}
+                              disabled={submittingResult === match._id}
+                              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm font-medium disabled:opacity-50"
+                            >
+                              {submittingResult === match._id ? 'Submitting...' : 'I Lost'}
+                            </button>
+                          </div>
+                        )}
+                        
                         <Link
                           href={`/match/${match._id}`}
                           className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
@@ -342,6 +456,34 @@ export default function MatchHistoryPage() {
                         </Link>
                       </div>
                     </div>
+
+                    {/* Submit Result Button (for active matches) */}
+                    {match.status === 'active' && (
+                      <div className="mt-4">
+                        <button
+                          onClick={() => handleSubmitResult(match._id, 'win')}
+                          disabled={submittingResult === match._id}
+                          className={`px-4 py-2 rounded-md text-sm font-medium ${
+                            submittingResult === match._id
+                              ? 'bg-green-200 text-green-800 cursor-not-allowed'
+                              : 'bg-green-600 text-white hover:bg-green-500'
+                          }`}
+                        >
+                          {submittingResult === match._id ? 'Submitting...' : 'I Won'}
+                        </button>
+                        <button
+                          onClick={() => handleSubmitResult(match._id, 'loss')}
+                          disabled={submittingResult === match._id}
+                          className={`ml-2 px-4 py-2 rounded-md text-sm font-medium ${
+                            submittingResult === match._id
+                              ? 'bg-red-200 text-red-800 cursor-not-allowed'
+                              : 'bg-red-600 text-white hover:bg-red-500'
+                          }`}
+                        >
+                          {submittingResult === match._id ? 'Submitting...' : 'I Lost'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -363,6 +505,13 @@ export default function MatchHistoryPage() {
             className="text-indigo-600 hover:text-indigo-500 font-medium"
           >
             Browse Matches
+          </Link>
+          <span className="text-gray-300">|</span>
+          <Link
+            href="/leaderboard"
+            className="text-indigo-600 hover:text-indigo-500 font-medium"
+          >
+            🏆 Leaderboard
           </Link>
         </div>
       </main>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import dbConnect from '@/lib/mongodb';
 import Match from '@/models/Match';
+import User from '@/models/User';
 
 export async function GET(request: NextRequest) {
   try {

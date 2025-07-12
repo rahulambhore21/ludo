@@ -6,12 +6,13 @@ import Link from 'next/link';
 
 interface Transaction {
   _id: string;
-  type: 'deposit' | 'withdrawal';
+  type: 'deposit' | 'withdrawal' | 'referral-reward';
   amount: number;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
   proofUrl?: string;
   upiId?: string;
+  description?: string;
 }
 
 interface User {
@@ -83,11 +84,42 @@ export default function WalletHistoryPage() {
   };
 
   const getTypeColor = (type: string) => {
-    return type === 'deposit' ? 'text-green-600' : 'text-red-600';
+    switch (type) {
+      case 'deposit':
+        return 'text-green-600';
+      case 'withdrawal':
+        return 'text-red-600';
+      case 'referral-reward':
+        return 'text-purple-600';
+      default:
+        return 'text-gray-600';
+    }
   };
 
   const getTypeIcon = (type: string) => {
-    return type === 'deposit' ? '↓' : '↑';
+    switch (type) {
+      case 'deposit':
+        return '↓';
+      case 'withdrawal':
+        return '↑';
+      case 'referral-reward':
+        return '🎁';
+      default:
+        return '•';
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'deposit':
+        return 'Deposit';
+      case 'withdrawal':
+        return 'Withdrawal';
+      case 'referral-reward':
+        return 'Referral Reward';
+      default:
+        return type;
+    }
   };
 
   if (!user) {
@@ -151,8 +183,8 @@ export default function WalletHistoryPage() {
                       </div>
                       <div>
                         <div className="flex items-center space-x-2">
-                          <h4 className="text-lg font-medium text-gray-900 capitalize">
-                            {transaction.type}
+                          <h4 className="text-lg font-medium text-gray-900">
+                            {getTypeLabel(transaction.type)}
                           </h4>
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(transaction.status)}`}>
                             {transaction.status}
@@ -167,6 +199,11 @@ export default function WalletHistoryPage() {
                             minute: '2-digit',
                           })}
                         </p>
+                        {transaction.description && (
+                          <p className="text-sm text-gray-500">
+                            {transaction.description}
+                          </p>
+                        )}
                         {transaction.upiId && (
                           <p className="text-sm text-gray-500">
                             UPI: {transaction.upiId}
@@ -176,7 +213,7 @@ export default function WalletHistoryPage() {
                     </div>
                     <div className="text-right">
                       <div className={`text-lg font-bold ${getTypeColor(transaction.type)}`}>
-                        {transaction.type === 'deposit' ? '+' : '-'}{transaction.amount} coins
+                        {transaction.type === 'withdrawal' ? '-' : '+'}{transaction.amount} coins
                       </div>
                       <div className="text-sm text-gray-500">
                         ₹{transaction.amount}

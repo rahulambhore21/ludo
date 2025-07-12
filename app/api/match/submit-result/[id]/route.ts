@@ -146,19 +146,45 @@ async function processMatchResults(match: any) {
       // Create win transaction
       await Transaction.create({
         userId: winnerId,
-        type: 'deposit',
+        type: 'match-winning',
         amount: winnings,
         status: 'approved',
         description: 'Match winnings',
+        matchId: match._id,
       });
+
+      // Handle referral rewards - 1% of pot to referrer if winner was referred
+      const winner = await User.findById(winnerId).populate('referredBy', 'name phone');
+      if (winner?.referredBy) {
+        const referralReward = Math.round(match.pot * 0.01); // 1% of total pot
+        
+        // Add referral reward to referrer's balance
+        await User.findByIdAndUpdate(
+          winner.referredBy._id,
+          { $inc: { balance: referralReward } }
+        );
+
+        // Create referral reward transaction
+        await Transaction.create({
+          userId: winner.referredBy._id,
+          type: 'referral-reward',
+          amount: referralReward,
+          status: 'approved',
+          description: `Referral reward: ${winner.name} won ₹${match.pot} match`,
+          matchId: match._id,
+        });
+
+        console.log(`🎁 Referral reward: ₹${referralReward} given to ${winner.referredBy.name} for ${winner.name}'s victory (1% of ₹${match.pot} pot)`);
+      }
 
       // Create platform cut transaction (system profit)
       await Transaction.create({
         userId: null, // System transaction
-        type: 'deposit',
+        type: 'match-deduction',
         amount: match.platformCut,
         status: 'approved',
         description: 'Platform commission',
+        matchId: match._id,
       });
 
       // Update match status
