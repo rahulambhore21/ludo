@@ -17,8 +17,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify OTP
-    const storedData = otpStore.get(phone);
+    const storedData = await otpStore.get(phone);
     if (!storedData || storedData.otp !== otp) {
+      console.log(`OTP verification failed for phone: ${phone}, stored: ${storedData ? 'exists' : 'not found'}`);
       return NextResponse.json(
         { error: 'Invalid or expired OTP' },
         { status: 400 }
@@ -32,24 +33,34 @@ export async function POST(request: NextRequest) {
     let user = await User.findOne({ phone });
     
     if (!user) {
-      // Generate unique referral code for new user
-      const referralCode = await generateUniqueReferralCode();
-      
-      // Create new user
-      user = new User({
-        name: storedData.name,
-        phone: storedData.phone,
-        isAdmin: false,
-        balance: 0,
-        referralCode,
-        referredBy: storedData.referredBy || undefined,
-      });
-      await user.save();
+      try {
+        // Generate unique referral code for new user
+        const referralCode = await generateUniqueReferralCode();
+        
+        // Create new user
+        user = new User({
+          name: storedData.name,
+          phone: storedData.phone,
+          isAdmin: false,
+          balance: 0,
+          referralCode,
+          referredBy: storedData.referredBy || undefined,
+        });
+        await user.save();
 
-      // If user was referred, store the referral relationship
-      if (storedData.referredBy) {
-        console.log(`New user ${user.name} was referred by user ${storedData.referredBy}`);
-        // Note: Referral rewards will be given when this user wins their first match
+        console.log(`New user created: ${user.name} (${user.phone}) with referral code: ${referralCode}`);
+
+        // If user was referred, store the referral relationship
+        if (storedData.referredBy) {
+          console.log(`New user ${user.name} was referred by user ${storedData.referredBy}`);
+          // Note: Referral rewards will be given when this user wins their first match
+        }
+      } catch (userCreationError) {
+        console.error('Error creating new user:', userCreationError);
+        return NextResponse.json(
+          { error: 'Failed to create user account' },
+          { status: 500 }
+        );
       }
     }
 
@@ -62,7 +73,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Clear OTP from store
-    otpStore.delete(phone);
+    await otpStore.delete(phone);
 
     return NextResponse.json({
       message: 'OTP verified successfully',

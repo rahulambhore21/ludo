@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     const otp = '123456'; // In production, generate random 6-digit OTP
     
     // Store OTP with phone and user data
-    otpStore.set(phone, otp, user.name);
+    await otpStore.set(phone, otp, user.name);
 
     // In production, send OTP via SMS service
     console.log(`Login OTP for ${phone}: ${otp}`);

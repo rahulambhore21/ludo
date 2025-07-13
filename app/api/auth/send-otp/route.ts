@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { otpStore } from '@/lib/otpStore';
 import { validateReferralCode } from '@/lib/referralUtils';
+import dbConnect from '@/lib/mongodb';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,14 +14,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Connect to database first
+    await dbConnect();
+
     // Validate referral code if provided
     let referringUser = null;
     if (referralCode) {
-      referringUser = await validateReferralCode(referralCode);
-      if (!referringUser) {
+      try {
+        referringUser = await validateReferralCode(referralCode);
+        if (!referringUser) {
+          return NextResponse.json(
+            { error: 'Invalid referral code' },
+            { status: 400 }
+          );
+        }
+      } catch (refError) {
+        console.error('Referral validation error:', refError);
         return NextResponse.json(
-          { error: 'Invalid referral code' },
-          { status: 400 }
+          { error: 'Error validating referral code' },
+          { status: 500 }
         );
       }
     }
@@ -29,7 +41,7 @@ export async function POST(request: NextRequest) {
     const otp = '123456'; // In production, generate random 6-digit OTP
     
     // Store OTP with phone, name, and referral info
-    otpStore.set(phone, otp, name, referringUser?._id);
+    await otpStore.set(phone, otp, name, referringUser?._id?.toString());
 
     // In production, send OTP via SMS service
     console.log(`OTP for ${phone}: ${otp}`);

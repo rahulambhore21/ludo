@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify OTP
-    const storedData = otpStore.get(phone);
+    const storedData = await otpStore.get(phone);
     if (!storedData || storedData.otp !== otp) {
       return NextResponse.json(
         { error: 'Invalid or expired OTP' },
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Clear OTP from store
-    otpStore.delete(phone);
+    await otpStore.delete(phone);
 
     return NextResponse.json({
       message: 'Login successful',
