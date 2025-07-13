@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { refreshUserBalance } from '@/lib/userUtils';
+import { useNotifications } from '../../../contexts/NotificationContext';
 
 interface User {
   id: string;
@@ -22,6 +23,8 @@ export default function DepositPage() {
   const [success, setSuccess] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const router = useRouter();
+  const { showToast } = useNotifications();
+  const { showToast } = useNotifications();
 
   useEffect(() => {
     // Check authentication
@@ -114,9 +117,11 @@ export default function DepositPage() {
 
       // Refresh user balance
       refreshUserBalance();
+      showToast('success', 'Deposit request submitted successfully! 💰');
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+      showToast('error', err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }

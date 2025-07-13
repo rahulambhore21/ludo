@@ -5,6 +5,7 @@ import Match from '@/models/Match';
 import User from '@/models/User';
 import Transaction from '@/models/Transaction';
 import mongoose from 'mongoose';
+import { createMatchJoinedNotification } from '@/lib/notificationUtils';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -107,6 +108,21 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       )
         .populate('player1', 'name phone')
         .populate('player2', 'name phone');
+
+      // Send notification to player1 that someone joined their match
+      if (updatedMatch) {
+        try {
+          await createMatchJoinedNotification(
+            updatedMatch.player1._id.toString(),
+            updatedMatch.player2.name,
+            matchId,
+            updatedMatch.entryFee
+          );
+        } catch (notifError) {
+          console.error('Failed to send match joined notification:', notifError);
+          // Don't fail the request if notification fails
+        }
+      }
 
       return NextResponse.json({
         message: 'Successfully joined match',

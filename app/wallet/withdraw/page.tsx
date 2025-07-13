@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { refreshUserBalance, updateUserInStorage } from '@/lib/userUtils';
+import { useNotifications } from '../../../contexts/NotificationContext';
 
 interface User {
   id: string;
@@ -21,6 +22,8 @@ export default function WithdrawPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
+  const { showToast } = useNotifications();
+  const { addNotification } = useNotifications();
 
   useEffect(() => {
     // Check authentication
@@ -82,6 +85,7 @@ export default function WithdrawPage() {
       }
 
       setSuccess('Withdrawal request submitted successfully! It will be processed by admin.');
+      showToast('success', 'Withdrawal request submitted successfully! 💸');
       setAmount('');
       setUpiId('');
 
@@ -93,6 +97,7 @@ export default function WithdrawPage() {
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+      showToast('error', err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }

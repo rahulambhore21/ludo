@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import NotificationBell from '../../components/NotificationBell';
+import { useNotifications } from '../../contexts/NotificationContext';
+import NotificationTestPanel from '../../components/NotificationTestPanel';
 
 interface User {
   id: string;
@@ -34,6 +37,7 @@ export default function DashboardPage() {
   const [walletOpen, setWalletOpen] = useState(false);
   const [joiningMatch, setJoiningMatch] = useState<string | null>(null);
   const router = useRouter();
+  const { showToast } = useNotifications();
 
   useEffect(() => {
     // Check if user is authenticated
@@ -108,13 +112,14 @@ export default function DashboardPage() {
       const data = await response.json();
 
       if (response.ok) {
+        showToast('success', 'Successfully joined the match! 🎮');
         router.push(`/match/${matchId}`);
       } else {
-        alert(data.error || 'Failed to join match');
+        showToast('error', data.error || 'Failed to join match');
       }
     } catch (error) {
       console.error('Error joining match:', error);
-      alert('Failed to join match. Please try again.');
+      showToast('error', 'Failed to join match. Please try again.');
     } finally {
       setJoiningMatch(null);
     }
@@ -172,6 +177,11 @@ export default function DashboardPage() {
                 <span className="text-white text-sm font-bold">🎲</span>
               </div>
               <span className="text-lg font-bold text-gray-900">Ludo</span>
+            </div>
+
+            {/* Center: Notification Bell */}
+            <div className="flex-1 flex justify-center">
+              <NotificationBell />
             </div>
 
             {/* Wallet Pill */}
@@ -392,6 +402,9 @@ export default function DashboardPage() {
         {/* Bottom Padding for mobile navigation */}
         <div className="h-8"></div>
       </main>
+
+      {/* Notification Test Panel - Only in development */}
+      {process.env.NODE_ENV === 'development' && <NotificationTestPanel />}
     </div>
   );
 }

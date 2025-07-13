@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { refreshUserBalance } from '@/lib/userUtils';
+import { useNotifications } from '../../../contexts/NotificationContext';
 
 interface User {
   id: string;
@@ -21,6 +22,7 @@ export default function CreateMatchPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
+  const { showToast } = useNotifications();
 
   useEffect(() => {
     // Check authentication
@@ -87,6 +89,7 @@ export default function CreateMatchPage() {
       }
 
       setSuccess('Match created successfully! Waiting for opponent...');
+      showToast('success', 'Match created successfully! 🎮 Waiting for opponent...');
       
       // Update user balance in localStorage
       const updatedUser = { ...user, balance: user.balance - fee };
@@ -103,6 +106,7 @@ export default function CreateMatchPage() {
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+      showToast('error', err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }

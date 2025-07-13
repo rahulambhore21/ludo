@@ -4,6 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import Transaction from '@/models/Transaction';
 import User from '@/models/User';
 import mongoose from 'mongoose';
+import { createWalletUpdateNotification } from '@/lib/notificationUtils';
 
 export async function POST(
   request: NextRequest,
@@ -77,6 +78,21 @@ export async function POST(
         }
       );
 
+      // Send notification to user
+      if (transaction.userId) {
+        try {
+          const notificationType = transaction.type === 'deposit' ? 'deposit_approved' : 'withdrawal_approved';
+          await createWalletUpdateNotification(
+            transaction.userId.toString(),
+            notificationType,
+            transaction.amount,
+            transactionId
+          );
+        } catch (notifError) {
+          console.error('Failed to send wallet notification:', notifError);
+        }
+      }
+
     } else if (action === 'reject') {
       // Reject transaction
       if (transaction.type === 'withdrawal') {
@@ -99,6 +115,21 @@ export async function POST(
           updatedAt: new Date(),
         }
       );
+
+      // Send notification to user
+      if (transaction.userId) {
+        try {
+          const notificationType = transaction.type === 'deposit' ? 'deposit_rejected' : 'withdrawal_rejected';
+          await createWalletUpdateNotification(
+            transaction.userId.toString(),
+            notificationType,
+            transaction.amount,
+            transactionId
+          );
+        } catch (notifError) {
+          console.error('Failed to send wallet notification:', notifError);
+        }
+      }
     }
 
     // Get updated transaction
