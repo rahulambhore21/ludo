@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import NotificationBell from '../../components/NotificationBell';
 import { useNotifications } from '../../contexts/NotificationContext';
-import NotificationTestPanel from '../../components/NotificationTestPanel';
 
 interface User {
   id: string;
@@ -403,8 +402,6 @@ export default function DashboardPage() {
         <div className="h-8"></div>
       </main>
 
-      {/* Notification Test Panel - Only in development */}
-      {process.env.NODE_ENV === 'development' && <NotificationTestPanel />}
     </div>
   );
 }
