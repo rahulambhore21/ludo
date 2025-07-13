@@ -24,7 +24,6 @@ export default function DepositPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const router = useRouter();
   const { showToast } = useNotifications();
-  const { showToast } = useNotifications();
 
   useEffect(() => {
     // Check authentication

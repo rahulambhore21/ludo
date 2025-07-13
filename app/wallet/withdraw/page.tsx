@@ -23,7 +23,6 @@ export default function WithdrawPage() {
   const [success, setSuccess] = useState('');
   const router = useRouter();
   const { showToast } = useNotifications();
-  const { addNotification } = useNotifications();
 
   useEffect(() => {
     // Check authentication
