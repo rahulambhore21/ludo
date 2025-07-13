@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Ludo Game - OTP Authentication",
   description: "Secure Ludo game with OTP-based authentication system",
+  other: {
+    "fast2sms": "Qb7wtVce2ueEp0keJ3GkKOU7vGFFSE4j",
+  },
 };
 
 export default function RootLayout({
