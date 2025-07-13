@@ -4,6 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import Match from '@/models/Match';
 import User from '@/models/User';
 import Transaction from '@/models/Transaction';
+import { uploadToCloudinary } from '@/lib/cloudinary';
 import mongoose from 'mongoose';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -11,8 +12,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Require authentication
     const authUser = requireAuth(request);
     const { id: matchId } = await params;
-
-    const { result } = await request.json();
 
     if (!matchId) {
       return NextResponse.json(
@@ -29,11 +28,75 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
-    if (!result || !['win', 'loss'].includes(result)) {
-      return NextResponse.json(
-        { error: 'Result must be either "win" or "loss"' },
-        { status: 400 }
-      );
+    // Parse request data (could be FormData for win or JSON for loss)
+    let result: string;
+    let screenshotUrl: string | null = null;
+
+    const contentType = request.headers.get('content-type');
+    
+    if (contentType && contentType.includes('multipart/form-data')) {
+      // Handle FormData (win with screenshot)
+      const formData = await request.formData();
+      result = formData.get('result') as string;
+      const screenshotFile = formData.get('screenshot') as File;
+
+      if (!result || !['win', 'loss'].includes(result)) {
+        return NextResponse.json(
+          { error: 'Result must be either "win" or "loss"' },
+          { status: 400 }
+        );
+      }
+
+      // For win results, screenshot is required
+      if (result === 'win') {
+        if (!screenshotFile) {
+          return NextResponse.json(
+            { error: 'Screenshot proof is required for win claims' },
+            { status: 400 }
+          );
+        }
+
+        // Validate screenshot file
+        if (!screenshotFile.type.startsWith('image/')) {
+          return NextResponse.json(
+            { error: 'Screenshot must be an image file' },
+            { status: 400 }
+          );
+        }
+
+        // Upload screenshot to Cloudinary
+        try {
+          const bytes = await screenshotFile.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          const fileName = `result-${matchId}-${Date.now()}`;
+          screenshotUrl = await uploadToCloudinary(buffer, fileName);
+        } catch (uploadError) {
+          console.error('Screenshot upload error:', uploadError);
+          return NextResponse.json(
+            { error: 'Failed to upload screenshot' },
+            { status: 500 }
+          );
+        }
+      }
+    } else {
+      // Handle JSON (loss without screenshot)
+      const body = await request.json();
+      result = body.result;
+
+      if (!result || !['win', 'loss'].includes(result)) {
+        return NextResponse.json(
+          { error: 'Result must be either "win" or "loss"' },
+          { status: 400 }
+        );
+      }
+
+      // Win results should include screenshot
+      if (result === 'win') {
+        return NextResponse.json(
+          { error: 'Screenshot proof is required for win claims. Please use the form upload.' },
+          { status: 400 }
+        );
+      }
     }
 
     // Connect to database
@@ -103,7 +166,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         status: updatedMatch?.status,
         player1Result: updatedMatch?.player1Result,
         player2Result: updatedMatch?.player2Result,
+        winner: updatedMatch?.winner,
       },
+      winnings: 0, // This will be updated when both results are processed
     });
 
   } catch (error) {
