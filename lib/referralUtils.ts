@@ -19,25 +19,37 @@ export async function generateUniqueReferralCode(): Promise<string> {
     let referralCode: string;
     let isUnique = false;
     let attempts = 0;
-    const maxAttempts = 10;
+    const maxAttempts = 20; // Increased from 10 to 20
     
     while (!isUnique && attempts < maxAttempts) {
       referralCode = generateReferralCode();
-      const existingUser = await User.findOne({ referralCode });
-      if (!existingUser) {
-        isUnique = true;
+      console.log(`Attempt ${attempts + 1}: Generated referral code ${referralCode}`);
+      
+      try {
+        const existingUser = await User.findOne({ referralCode });
+        if (!existingUser) {
+          isUnique = true;
+          console.log(`Referral code ${referralCode} is unique`);
+        } else {
+          console.log(`Referral code ${referralCode} already exists, trying again`);
+        }
+      } catch (dbError) {
+        console.error('Database error while checking referral code uniqueness:', dbError);
+        // Don't throw here, just try with a new code
       }
+      
       attempts++;
     }
     
     if (!isUnique) {
-      throw new Error('Unable to generate unique referral code after maximum attempts');
+      console.error(`Unable to generate unique referral code after ${maxAttempts} attempts`);
+      throw new Error(`Unable to generate unique referral code after ${maxAttempts} attempts`);
     }
     
     return referralCode!;
   } catch (error) {
     console.error('Error generating unique referral code:', error);
-    throw new Error('Failed to generate referral code');
+    throw new Error(`Failed to generate referral code: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
