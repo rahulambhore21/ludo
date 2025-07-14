@@ -2,13 +2,14 @@ import mongoose from 'mongoose';
 
 export interface ITransaction extends mongoose.Document {
   userId?: mongoose.Types.ObjectId; // Optional for system transactions
-  type: 'deposit' | 'withdrawal' | 'referral-reward' | 'match-winning' | 'match-deduction';
+  type: 'deposit' | 'withdrawal' | 'referral-reward' | 'match-winning' | 'match-deduction' | 'admin-credit' | 'admin-debit';
   amount: number;
   status: 'pending' | 'approved' | 'rejected';
   proofUrl?: string; // only for deposit
   upiId?: string; // only for withdrawal
   description?: string; // For match transactions, etc.
   matchId?: mongoose.Types.ObjectId; // For match-related transactions
+  adminId?: mongoose.Types.ObjectId; // For admin-initiated transactions
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,7 +22,7 @@ const TransactionSchema = new mongoose.Schema<ITransaction>({
   },
   type: {
     type: String,
-    enum: ['deposit', 'withdrawal', 'referral-reward', 'match-winning', 'match-deduction'],
+    enum: ['deposit', 'withdrawal', 'referral-reward', 'match-winning', 'match-deduction', 'admin-credit', 'admin-debit'],
     required: [true, 'Transaction type is required'],
   },
   amount: {
@@ -55,6 +56,13 @@ const TransactionSchema = new mongoose.Schema<ITransaction>({
     ref: 'Match',
     required: function(this: ITransaction) {
       return this.type === 'match-winning' || this.type === 'match-deduction';
+    },
+  },
+  adminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: function(this: ITransaction) {
+      return this.type === 'admin-credit' || this.type === 'admin-debit';
     },
   },
   createdAt: {

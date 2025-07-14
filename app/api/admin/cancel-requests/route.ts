@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const cancelRequests = await CancelRequest.find()
       .populate('matchId', 'entryFee pot roomCode status createdAt')
       .populate('requestedBy', 'name phone')
-      .populate('reviewedBy', 'name')
+      .populate('reviewedBy', 'name phone')
       .sort({ createdAt: -1 })
       .select('-__v')
       .lean();

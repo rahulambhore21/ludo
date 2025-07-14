@@ -4,7 +4,6 @@ import dbConnect from '@/lib/mongodb';
 import CancelRequest from '@/models/CancelRequest';
 import Match from '@/models/Match';
 import User from '@/models/User';
-import Transaction from '@/models/Transaction';
 import mongoose from 'mongoose';
 
 export async function POST(
@@ -20,7 +19,7 @@ export async function POST(
 
     if (!requestId || !['approve', 'reject'].includes(action)) {
       return NextResponse.json(
-        { error: 'Valid request ID and action (approve/reject) are required' },
+        { error: 'Invalid request ID or action' },
         { status: 400 }
       );
     }
@@ -37,7 +36,10 @@ export async function POST(
     await dbConnect();
 
     // Find the cancel request
-    const cancelRequest = await CancelRequest.findById(requestId).populate('matchId');
+    const cancelRequest = await CancelRequest.findById(requestId)
+      .populate('matchId')
+      .populate('requestedBy');
+
     if (!cancelRequest) {
       return NextResponse.json(
         { error: 'Cancel request not found' },
@@ -45,99 +47,71 @@ export async function POST(
       );
     }
 
-    // Check if already reviewed
     if (cancelRequest.status !== 'pending') {
       return NextResponse.json(
-        { error: 'This cancel request has already been reviewed' },
+        { error: 'Cancel request has already been processed' },
         { status: 400 }
       );
     }
 
-    const match = cancelRequest.matchId;
-    if (!match) {
-      return NextResponse.json(
-        { error: 'Associated match not found' },
-        { status: 404 }
-      );
-    }
+    // Start a session for transaction
+    const session = await mongoose.startSession();
+    
+    try {
+      await session.withTransaction(async () => {
+        // Update cancel request status
+        cancelRequest.status = action === 'approve' ? 'approved' : 'rejected';
+        cancelRequest.reviewedBy = adminUser.userId;
+        cancelRequest.reviewNote = note || '';
+        await cancelRequest.save({ session });
 
-    // Update cancel request status
-    cancelRequest.status = action === 'approve' ? 'approved' : 'rejected';
-    cancelRequest.reviewedBy = adminUser.userId;
-    cancelRequest.reviewNote = note || '';
-    await cancelRequest.save();
+        if (action === 'approve') {
+          // If approved, cancel the match and refund entry fees
+          const match = await Match.findById(cancelRequest.matchId._id).session(session);
+          
+          if (match && match.status !== 'completed') {
+            // Update match status to cancelled
+            match.status = 'cancelled';
+            await match.save({ session });
 
-    // If approved, process the cancellation
-    if (action === 'approve') {
-      // Update match status to cancelled
-      await Match.findByIdAndUpdate(match._id, {
-        status: 'cancelled',
-        cancelledAt: new Date(),
-        cancelledBy: adminUser.userId,
-        cancelReason: cancelRequest.reason,
+            // Refund entry fees to both players
+            if (match.player1) {
+              await User.findByIdAndUpdate(
+                match.player1,
+                { $inc: { balance: match.entryFee } },
+                { session }
+              );
+            }
+
+            if (match.player2) {
+              await User.findByIdAndUpdate(
+                match.player2,
+                { $inc: { balance: match.entryFee } },
+                { session }
+              );
+            }
+          }
+        }
       });
 
-      // Refund entry fees to both players if match was active
-      if (match.status === 'active' && match.player1 && match.player2) {
-        // Refund to player 1
-        await User.findByIdAndUpdate(match.player1, {
-          $inc: { balance: match.entryFee }
-        });
+      return NextResponse.json({
+        message: `Cancel request ${action}d successfully`,
+        cancelRequest: {
+          id: cancelRequest._id,
+          status: cancelRequest.status,
+          reviewedBy: adminUser.userId,
+          reviewNote: cancelRequest.reviewNote,
+        },
+      });
 
-        // Refund to player 2
-        await User.findByIdAndUpdate(match.player2, {
-          $inc: { balance: match.entryFee }
-        });
-
-        // Create refund transaction records
-        const refundTransactions = [
-          {
-            userId: match.player1,
-            type: 'refund',
-            amount: match.entryFee,
-            status: 'approved',
-            description: `Refund for cancelled match #${match._id.toString().slice(-6)}`,
-            approvedBy: adminUser.userId,
-          },
-          {
-            userId: match.player2,
-            type: 'refund',
-            amount: match.entryFee,
-            status: 'approved',
-            description: `Refund for cancelled match #${match._id.toString().slice(-6)}`,
-            approvedBy: adminUser.userId,
-          }
-        ];
-
-        await Transaction.insertMany(refundTransactions);
-      } else if (match.status === 'waiting' && match.player1) {
-        // If only one player joined, refund to that player
-        await User.findByIdAndUpdate(match.player1, {
-          $inc: { balance: match.entryFee }
-        });
-
-        await Transaction.create({
-          userId: match.player1,
-          type: 'refund',
-          amount: match.entryFee,
-          status: 'approved',
-          description: `Refund for cancelled match #${match._id.toString().slice(-6)}`,
-          approvedBy: adminUser.userId,
-        });
-      }
+    } finally {
+      await session.endSession();
     }
 
-    return NextResponse.json({
-      message: `Cancel request ${action}d successfully`,
-      cancelRequest: {
-        _id: cancelRequest._id,
-        status: cancelRequest.status,
-        reviewedBy: adminUser.userId,
-        reviewNote: cancelRequest.reviewNote,
-      },
-    });
-
   } catch (error) {
+    const { action } = await params;
+    console.error(`Admin ${action} cancel request error:`, error);
+
     if (error instanceof Error && error.message === 'Unauthorized') {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -152,9 +126,8 @@ export async function POST(
       );
     }
 
-    console.error('Admin review cancel request error:', error);
     return NextResponse.json(
-      { error: 'Failed to review cancel request' },
+      { error: `Failed to ${action} cancel request` },
       { status: 500 }
     );
   }

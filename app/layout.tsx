@@ -6,7 +6,7 @@ import { Toaster } from "react-hot-toast";
 
 const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-inter",
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} font-sans antialiased`}
+        className={`${inter.className} antialiased`}
       >
         <NotificationProvider>
           {children}

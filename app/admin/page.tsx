@@ -25,7 +25,7 @@ export default function AdminDashboard() {
   const fetchAdminStats = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const response = await fetch('/api/admin/stats', {
+      const response = await fetch('/api/admin/reports', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -37,7 +37,18 @@ export default function AdminDashboard() {
         throw new Error(data.error || 'Failed to fetch admin stats');
       }
 
-      setStats(data.stats);
+      // Map the enhanced stats to the expected format
+      const mappedStats = {
+        totalUsers: data.stats.users.total,
+        totalCoinsInSystem: data.stats.users.totalCoinsInSystem,
+        totalPlatformEarnings: data.stats.earnings.total,
+        conflictsPending: data.stats.matches.conflicts,
+        transactionsToday: data.stats.transactions.depositsToday + data.stats.transactions.withdrawalsToday,
+        pendingDeposits: data.stats.transactions.pendingDeposits,
+        pendingWithdrawals: data.stats.transactions.pendingWithdrawals,
+      };
+
+      setStats(mappedStats);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

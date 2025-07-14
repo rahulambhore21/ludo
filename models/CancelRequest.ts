@@ -27,11 +27,11 @@ const CancelRequestSchema = new mongoose.Schema<ICancelRequest>({
     type: String,
     required: true,
     enum: [
-      'opponent-not-responding',
-      'technical-issues',
-      'wrong-match-joined',
-      'game-crashed',
-      'emergency',
+      'opponent_not_responding',
+      'technical_issues',
+      'game_crashed',
+      'unfair_play',
+      'personal_emergency',
       'other'
     ],
   },
@@ -57,10 +57,9 @@ const CancelRequestSchema = new mongoose.Schema<ICancelRequest>({
   timestamps: true,
 });
 
-// Indexes for efficient queries
+// Index for efficient queries
 CancelRequestSchema.index({ matchId: 1 });
 CancelRequestSchema.index({ requestedBy: 1 });
 CancelRequestSchema.index({ status: 1 });
-CancelRequestSchema.index({ createdAt: -1 });
 
 export default mongoose.models.CancelRequest || mongoose.model<ICancelRequest>('CancelRequest', CancelRequestSchema);

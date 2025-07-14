@@ -9,6 +9,8 @@ export interface IMatch extends mongoose.Document {
   roomCode: string;
   player1Result?: 'win' | 'loss';
   player2Result?: 'win' | 'loss';
+  player1Screenshot?: string; // Screenshot URL for player1's win claim
+  player2Screenshot?: string; // Screenshot URL for player2's win claim
   winner?: mongoose.Types.ObjectId;
   status: 'waiting' | 'active' | 'in-progress' | 'completed' | 'cancelled' | 'conflict';
   createdAt: Date;
@@ -50,6 +52,14 @@ const MatchSchema = new mongoose.Schema<IMatch>({
   player2Result: {
     type: String,
     enum: ['win', 'loss'],
+  },
+  player1Screenshot: {
+    type: String,
+    required: false,
+  },
+  player2Screenshot: {
+    type: String,
+    required: false,
   },
   winner: {
     type: mongoose.Schema.Types.ObjectId,

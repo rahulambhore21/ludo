@@ -28,17 +28,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
-    // Parse request data (could be FormData for win or JSON for loss)
+    // Parse request based on content type
     let result: string;
     let screenshotUrl: string | null = null;
 
-    const contentType = request.headers.get('content-type');
+    const contentType = request.headers.get('content-type') || '';
     
-    if (contentType && contentType.includes('multipart/form-data')) {
-      // Handle FormData (win with screenshot)
+    if (contentType.includes('multipart/form-data')) {
+      // Handle FormData (when screenshot is included)
       const formData = await request.formData();
       result = formData.get('result') as string;
-      const screenshotFile = formData.get('screenshot') as File;
+      const screenshotFile = formData.get('screenshot') as File | null;
 
       if (!result || !['win', 'loss'].includes(result)) {
         return NextResponse.json(
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         );
       }
 
-      // For win results, screenshot is required
+      // For win claims, screenshot is required
       if (result === 'win') {
         if (!screenshotFile) {
           return NextResponse.json(
@@ -56,30 +56,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           );
         }
 
-        // Validate screenshot file
-        if (!screenshotFile.type.startsWith('image/')) {
-          return NextResponse.json(
-            { error: 'Screenshot must be an image file' },
-            { status: 400 }
-          );
-        }
-
         // Upload screenshot to Cloudinary
         try {
           const bytes = await screenshotFile.arrayBuffer();
           const buffer = Buffer.from(bytes);
-          const fileName = `result-${matchId}-${Date.now()}`;
+          const fileName = `match-result-${matchId}-${authUser.userId}-${Date.now()}`;
           screenshotUrl = await uploadToCloudinary(buffer, fileName);
         } catch (uploadError) {
           console.error('Screenshot upload error:', uploadError);
           return NextResponse.json(
-            { error: 'Failed to upload screenshot' },
+            { error: 'Failed to upload screenshot. Please try again.' },
             { status: 500 }
           );
         }
       }
     } else {
-      // Handle JSON (loss without screenshot)
+      // Handle JSON (for loss submissions)
       const body = await request.json();
       result = body.result;
 
@@ -90,10 +82,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         );
       }
 
-      // Win results should include screenshot
+      // Require screenshot for win claims even in JSON mode
       if (result === 'win') {
         return NextResponse.json(
-          { error: 'Screenshot proof is required for win claims. Please use the form upload.' },
+          { error: 'Screenshot proof is required for win claims. Please use the file upload method.' },
           { status: 400 }
         );
       }
@@ -145,11 +137,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
-    // Update the match with the result
-    const updateField = isPlayer1 ? 'player1Result' : 'player2Result';
-    await Match.findByIdAndUpdate(matchId, {
-      [updateField]: result,
-    });
+    // Update the match with the result and screenshot
+    const updateData: any = {};
+    
+    if (isPlayer1) {
+      updateData.player1Result = result;
+      if (screenshotUrl) {
+        updateData.player1Screenshot = screenshotUrl;
+      }
+    } else {
+      updateData.player2Result = result;
+      if (screenshotUrl) {
+        updateData.player2Screenshot = screenshotUrl;
+      }
+    }
+
+    await Match.findByIdAndUpdate(matchId, updateData);
 
     // Get updated match to check if both results are submitted
     const updatedMatch = await Match.findById(matchId);

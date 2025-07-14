@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import AdminLayout from '@/components/AdminLayout';
+import AdminLayout from '../../../components/AdminLayout';
+import { useNotifications } from '../../../contexts/NotificationContext';
 
 interface CancelRequest {
   _id: string;
@@ -25,33 +25,22 @@ interface CancelRequest {
   reviewedBy?: {
     _id: string;
     name: string;
+    phone: string;
   };
   reviewNote?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-const REASON_LABELS: { [key: string]: string } = {
-  'opponent-not-responding': 'Opponent not responding',
-  'technical-issues': 'Technical issues',
-  'wrong-match-joined': 'Wrong match joined',
-  'game-crashed': 'Game crashed',
-  'emergency': 'Emergency',
-  'other': 'Other reason',
-};
-
 export default function AdminCancelRequests() {
   const [cancelRequests, setCancelRequests] = useState<CancelRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [reviewingRequest, setReviewingRequest] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<CancelRequest | null>(null);
   const [reviewNote, setReviewNote] = useState('');
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve');
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
-
-  const router = useRouter();
+  const { showToast } = useNotifications();
 
   useEffect(() => {
     fetchCancelRequests();
@@ -59,73 +48,98 @@ export default function AdminCancelRequests() {
 
   const fetchCancelRequests = async () => {
     try {
-      setLoading(true);
       const token = localStorage.getItem('authToken');
-      
+      if (!token) {
+        throw new Error('No authentication token');
+      }
+
       const response = await fetch('/api/admin/cancel-requests', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch cancel requests');
+        throw new Error('Failed to fetch cancel requests');
       }
 
+      const data = await response.json();
       setCancelRequests(data.cancelRequests);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch cancel requests';
+      setError(errorMessage);
+      showToast('error', errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const openReviewModal = (request: CancelRequest, action: 'approve' | 'reject') => {
-    setSelectedRequest(request);
-    setReviewAction(action);
-    setReviewNote('');
-    setShowReviewModal(true);
-  };
+  const handleReviewRequest = async (requestId: string, action: 'approve' | 'reject') => {
+    if (!reviewNote.trim() && action === 'reject') {
+      showToast('error', 'Please provide a reason for rejection');
+      return;
+    }
 
-  const closeReviewModal = () => {
-    setSelectedRequest(null);
-    setReviewNote('');
-    setShowReviewModal(false);
-  };
-
-  const handleReview = async () => {
-    if (!selectedRequest) return;
-
-    setReviewingRequest(selectedRequest._id);
+    setProcessingId(requestId);
 
     try {
       const token = localStorage.getItem('authToken');
-      
-      const response = await fetch(`/api/admin/cancel-requests/${selectedRequest._id}/${reviewAction}`, {
+      if (!token) {
+        throw new Error('No authentication token');
+      }
+
+      const response = await fetch(`/api/admin/cancel-requests/${requestId}/${action}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ note: reviewNote }),
+        body: JSON.stringify({
+          note: reviewNote.trim(),
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to review cancel request');
+        throw new Error(data.error || `Failed to ${action} cancel request`);
       }
 
+      showToast('success', `Cancel request ${action}d successfully`);
+      
       // Refresh the list
       await fetchCancelRequests();
-      closeReviewModal();
       
+      // Close modal
+      setSelectedRequest(null);
+      setReviewNote('');
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to review request');
+      const errorMessage = err instanceof Error ? err.message : `Failed to ${action} cancel request`;
+      showToast('error', errorMessage);
     } finally {
-      setReviewingRequest(null);
+      setProcessingId(null);
+    }
+  };
+
+  const getReasonLabel = (reason: string) => {
+    const labels: { [key: string]: string } = {
+      'opponent_not_responding': 'Opponent not responding',
+      'technical_issues': 'Technical issues',
+      'game_crashed': 'Game crashed',
+      'unfair_play': 'Unfair play',
+      'personal_emergency': 'Personal emergency',
+      'other': 'Other reason',
+    };
+    return labels[reason] || reason;
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -137,8 +151,24 @@ export default function AdminCancelRequests() {
   if (loading) {
     return (
       <AdminLayout title="Cancel Requests">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout title="Cancel Requests">
+        <div className="text-center py-12">
+          <div className="text-red-600 text-lg mb-4">{error}</div>
+          <button
+            onClick={fetchCancelRequests}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+          >
+            Try Again
+          </button>
         </div>
       </AdminLayout>
     );
@@ -147,270 +177,244 @@ export default function AdminCancelRequests() {
   return (
     <AdminLayout title="Cancel Requests">
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
+        {/* Header with Filters */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
           <h1 className="text-2xl font-bold text-gray-900">Cancel Requests</h1>
+          
           <div className="flex space-x-2">
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value as any)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Requests</option>
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
             </select>
-            <button
-              onClick={fetchCancelRequests}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-            >
-              Refresh
-            </button>
           </div>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4">
-            <div className="text-red-600">{error}</div>
-          </div>
-        )}
-
-        {/* Stats */}
+        {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-gray-600">📝</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Total</dt>
-                    <dd className="text-lg font-medium text-gray-900">{cancelRequests.length}</dd>
-                  </dl>
-                </div>
-              </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="text-sm font-medium text-gray-500">Total Requests</div>
+            <div className="text-2xl font-bold text-gray-900">{cancelRequests.length}</div>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="text-sm font-medium text-gray-500">Pending</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {cancelRequests.filter(r => r.status === 'pending').length}
             </div>
           </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-yellow-600">⏳</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Pending</dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {cancelRequests.filter(r => r.status === 'pending').length}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="text-sm font-medium text-gray-500">Approved</div>
+            <div className="text-2xl font-bold text-green-600">
+              {cancelRequests.filter(r => r.status === 'approved').length}
             </div>
           </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-green-600">✅</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Approved</dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {cancelRequests.filter(r => r.status === 'approved').length}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-red-600">❌</span>
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Rejected</dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {cancelRequests.filter(r => r.status === 'rejected').length}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="text-sm font-medium text-gray-500">Rejected</div>
+            <div className="text-2xl font-bold text-red-600">
+              {cancelRequests.filter(r => r.status === 'rejected').length}
             </div>
           </div>
         </div>
 
-        {/* Cancel Requests List */}
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        {/* Cancel Requests Table */}
+        <div className="bg-white shadow rounded-lg overflow-hidden">
           {filteredRequests.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">No cancel requests found.</p>
+              <div className="text-gray-500 text-lg">
+                {filter === 'all' ? 'No cancel requests found' : `No ${filter} requests found`}
+              </div>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-200">
-              {filteredRequests.map((request) => (
-                <li key={request._id} className="px-6 py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          Match #{request.matchId._id.slice(-6)}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          Room: {request.matchId.roomCode} • Entry: ₹{request.matchId.entryFee}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Match Details
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      User
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Reason
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredRequests.map((request) => (
+                    <tr key={request._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          Room: {request.matchId.roomCode}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Entry: ₹{request.matchId.entryFee} | Pot: ₹{request.matchId.pot}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
                           {request.requestedBy.name}
-                        </p>
-                        <p className="text-sm text-gray-500">{request.requestedBy.phone}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {REASON_LABELS[request.reason] || request.reason}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(request.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-3">
-                      {/* Screenshot Preview */}
-                      <a
-                        href={request.screenshotUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        View Screenshot
-                      </a>
-
-                      {/* Status Badge */}
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        request.status === 'approved' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                      </span>
-
-                      {/* Action Buttons */}
-                      {request.status === 'pending' && (
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => openReviewModal(request, 'approve')}
-                            disabled={reviewingRequest === request._id}
-                            className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => openReviewModal(request, 'reject')}
-                            disabled={reviewingRequest === request._id}
-                            className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:opacity-50"
-                          >
-                            Reject
-                          </button>
                         </div>
-                      )}
-
-                      {request.status !== 'pending' && request.reviewNote && (
-                        <div className="text-xs text-gray-500 max-w-xs">
-                          Note: {request.reviewNote}
+                        <div className="text-sm text-gray-500">
+                          {request.requestedBy.phone}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {getReasonLabel(request.reason)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(request.status)}`}>
+                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(request.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                        <button
+                          onClick={() => setSelectedRequest(request)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
         {/* Review Modal */}
-        {showReviewModal && selectedRequest && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full">
+        {selectedRequest && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  {reviewAction === 'approve' ? 'Approve' : 'Reject'} Cancel Request
-                </h3>
-                
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600">
-                    <strong>Match:</strong> #{selectedRequest.matchId._id.slice(-6)} 
-                    (Room: {selectedRequest.matchId.roomCode})
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    <strong>User:</strong> {selectedRequest.requestedBy.name}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    <strong>Reason:</strong> {REASON_LABELS[selectedRequest.reason] || selectedRequest.reason}
-                  </p>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Cancel Request Details
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setSelectedRequest(null);
+                      setReviewNote('');
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
 
-                <div className="mb-4">
-                  <label htmlFor="reviewNote" className="block text-sm font-medium text-gray-700 mb-2">
-                    Review Note (Optional)
-                  </label>
-                  <textarea
-                    id="reviewNote"
-                    value={reviewNote}
-                    onChange={(e) => setReviewNote(e.target.value)}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Add a note about your decision..."
-                  />
-                </div>
-
-                {reviewAction === 'approve' && (
-                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                    <p className="text-sm text-green-800">
-                      ⚠️ Approving will cancel the match and refund entry fees to both players.
-                    </p>
+                <div className="space-y-4">
+                  {/* Request Info */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Match Room</label>
+                      <div className="text-sm text-gray-900">{selectedRequest.matchId.roomCode}</div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Entry Fee</label>
+                      <div className="text-sm text-gray-900">₹{selectedRequest.matchId.entryFee}</div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Requested By</label>
+                      <div className="text-sm text-gray-900">
+                        {selectedRequest.requestedBy.name} ({selectedRequest.requestedBy.phone})
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Reason</label>
+                      <div className="text-sm text-gray-900">{getReasonLabel(selectedRequest.reason)}</div>
+                    </div>
                   </div>
-                )}
 
-                <div className="flex space-x-3">
-                  <button
-                    onClick={closeReviewModal}
-                    disabled={reviewingRequest === selectedRequest._id}
-                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleReview}
-                    disabled={reviewingRequest === selectedRequest._id}
-                    className={`flex-1 px-4 py-2 text-white rounded-md disabled:opacity-50 ${
-                      reviewAction === 'approve' 
-                        ? 'bg-green-600 hover:bg-green-700' 
-                        : 'bg-red-600 hover:bg-red-700'
-                    }`}
-                  >
-                    {reviewingRequest === selectedRequest._id ? 'Processing...' : 
-                     reviewAction === 'approve' ? 'Approve Request' : 'Reject Request'}
-                  </button>
+                  {/* Screenshot */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Screenshot Proof</label>
+                    <img
+                      src={selectedRequest.screenshotUrl}
+                      alt="Cancel request proof"
+                      className="max-w-full h-auto rounded-md border"
+                    />
+                  </div>
+
+                  {/* Review Note */}
+                  {selectedRequest.status === 'pending' && (
+                    <div>
+                      <label htmlFor="reviewNote" className="block text-sm font-medium text-gray-700 mb-2">
+                        Review Note (required for rejection)
+                      </label>
+                      <textarea
+                        id="reviewNote"
+                        value={reviewNote}
+                        onChange={(e) => setReviewNote(e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Add a note about your decision..."
+                      />
+                    </div>
+                  )}
+
+                  {/* Previous Review */}
+                  {selectedRequest.status !== 'pending' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Review Details</label>
+                      <div className="text-sm text-gray-900">
+                        Status: <span className={`font-medium ${selectedRequest.status === 'approved' ? 'text-green-600' : 'text-red-600'}`}>
+                          {selectedRequest.status.charAt(0).toUpperCase() + selectedRequest.status.slice(1)}
+                        </span>
+                      </div>
+                      {selectedRequest.reviewedBy && (
+                        <div className="text-sm text-gray-500">
+                          Reviewed by: {selectedRequest.reviewedBy.name}
+                        </div>
+                      )}
+                      {selectedRequest.reviewNote && (
+                        <div className="text-sm text-gray-900 mt-1">
+                          Note: {selectedRequest.reviewNote}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  {selectedRequest.status === 'pending' && (
+                    <div className="flex space-x-3 pt-4">
+                      <button
+                        onClick={() => handleReviewRequest(selectedRequest._id, 'reject')}
+                        disabled={processingId === selectedRequest._id}
+                        className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                      >
+                        {processingId === selectedRequest._id ? 'Processing...' : 'Reject'}
+                      </button>
+                      <button
+                        onClick={() => handleReviewRequest(selectedRequest._id, 'approve')}
+                        disabled={processingId === selectedRequest._id}
+                        className="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                      >
+                        {processingId === selectedRequest._id ? 'Processing...' : 'Approve & Refund'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

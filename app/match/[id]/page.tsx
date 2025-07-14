@@ -3,29 +3,9 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import CancelGameModal from '@/components/CancelGameModal';
+import { useNotifications } from '../../../contexts/NotificationContext';
+import CancelGameModal from '../../../components/CancelGameModal';
 
-interface Match {
-  _id: string;
-  player1: {
-    _id: string;
-    name: string;
-    phone: string;
-  };
-  player2?: {
-    _id: string;
-    name: string;
-    phone: string;
-  } | null;
-  entryFee: number;
-  pot: number;
-  roomCode: string;
-  status: 'waiting' | 'active' | 'in-progress' | 'completed' | 'cancelled';
-  winner?: {
-    _id: string;
-    name: string;
-  } | null;
-  userRole?: string;
 interface Match {
   _id: string;
   player1: {
@@ -61,7 +41,6 @@ interface Match {
   createdAt: string;
   completedAt?: string;
 }
-}
 
 interface User {
   id: string;
@@ -85,16 +64,11 @@ export default function MatchPage({ params }: MatchPageProps) {
   const [error, setError] = useState('');
   const [submittingResult, setSubmittingResult] = useState(false);
   const [resultSubmitted, setResultSubmitted] = useState(false);
-  
-  // Cancel game functionality
+  const [proofShot, setProofShot] = useState<File | null>(null);
+  const [proofPreview, setProofPreview] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelLoading, setCancelLoading] = useState(false);
-  
-  // Screenshot proof for "I Won"
-  const [winProofScreenshot, setWinProofScreenshot] = useState<File | null>(null);
-  const [winProofPreview, setWinProofPreview] = useState<string | null>(null);
-  
   const router = useRouter();
+  const { showToast } = useNotifications();
 
   const fetchMatch = async () => {
     try {
@@ -120,12 +94,35 @@ export default function MatchPage({ params }: MatchPageProps) {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        showToast('error', 'Please select an image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('error', 'Image size should be less than 5MB');
+        return;
+      }
+
+      setProofShot(file);
+      
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setProofPreview(url);
+    }
+  };
+
   const handleSubmitResult = async (result: 'win' | 'loss') => {
     if (!match || !user) return;
 
-    // For win results, require screenshot proof
-    if (result === 'win' && !winProofScreenshot) {
-      setError('Screenshot proof is required when claiming a win');
+    // Require screenshot for win claims
+    if (result === 'win' && !proofShot) {
+      showToast('error', 'Screenshot proof is required to claim victory');
       return;
     }
 
@@ -135,11 +132,11 @@ export default function MatchPage({ params }: MatchPageProps) {
     try {
       const token = localStorage.getItem('authToken');
       
-      // Use FormData if screenshot is required (for win)
-      if (result === 'win' && winProofScreenshot) {
+      if (result === 'win' && proofShot) {
+        // Use FormData for file upload
         const formData = new FormData();
         formData.append('result', result);
-        formData.append('screenshot', winProofScreenshot);
+        formData.append('screenshot', proofShot);
 
         const response = await fetch(`/api/match/submit-result/${match._id}`, {
           method: 'POST',
@@ -156,12 +153,19 @@ export default function MatchPage({ params }: MatchPageProps) {
         }
 
         setResultSubmitted(true);
+        showToast('success', 'Result submitted successfully');
         
-        // Clear screenshot after successful submission
-        setWinProofScreenshot(null);
-        setWinProofPreview(null);
+        // Refresh match data
+        await fetchMatch();
+
+        // Update user balance if won
+        if (data.winnings) {
+          const updatedUser = { ...user, balance: user.balance + data.winnings };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          setUser(updatedUser);
+        }
       } else {
-        // For loss results, use JSON
+        // Regular JSON request for loss
         const response = await fetch(`/api/match/submit-result/${match._id}`, {
           method: 'POST',
           headers: {
@@ -178,84 +182,18 @@ export default function MatchPage({ params }: MatchPageProps) {
         }
 
         setResultSubmitted(true);
-      }
-      
-      // Refresh match data
-      await fetchMatch();
-
-      // Update user balance if won
-      if (result === 'win') {
-        const updatedUser = { ...user, balance: user.balance + (match.pot * 0.9) }; // 90% of pot (minus 10% platform cut)
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
+        showToast('success', 'Result submitted successfully');
+        
+        // Refresh match data
+        await fetchMatch();
       }
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit result');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to submit result';
+      setError(errorMessage);
+      showToast('error', errorMessage);
     } finally {
       setSubmittingResult(false);
-    }
-  };
-
-  const handleCancelRequest = async (reason: string, screenshot: File) => {
-    if (!match) return;
-
-    setCancelLoading(true);
-
-    try {
-      const token = localStorage.getItem('authToken');
-      const formData = new FormData();
-      formData.append('matchId', match._id);
-      formData.append('reason', reason);
-      formData.append('screenshot', screenshot);
-
-      const response = await fetch('/api/match/cancel-request', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit cancel request');
-      }
-
-      // Show success message and refresh match
-      setError('');
-      alert('Cancel request submitted successfully. You will be notified when it is reviewed.');
-      await fetchMatch();
-
-    } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Failed to submit cancel request');
-    } finally {
-      setCancelLoading(false);
-    }
-  };
-
-  const handleWinProofChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please select a valid image file for win proof');
-        return;
-      }
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Image size should be less than 5MB');
-        return;
-      }
-
-      setWinProofScreenshot(file);
-      setError('');
-
-      // Create preview URL
-      const url = URL.createObjectURL(file);
-      setWinProofPreview(url);
     }
   };
 
@@ -385,7 +323,8 @@ export default function MatchPage({ params }: MatchPageProps) {
   // Add error boundary wrapper
   try {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <>
+        <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -499,87 +438,95 @@ export default function MatchPage({ params }: MatchPageProps) {
           {canSubmitResult && match && user && (
             <div className="bg-white shadow rounded-lg p-6 mb-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Submit Result</h3>
-              
-              {/* Screenshot Proof for "I Won" */}
-              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                <h4 className="font-medium text-yellow-800 mb-2">📸 Screenshot Proof Required for Win Claims</h4>
-                <p className="text-sm text-yellow-700 mb-3">
-                  To claim a win, you must upload a screenshot of the completed game as proof.
-                </p>
-                
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleWinProofChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                
-                {winProofPreview && (
-                  <div className="mt-3">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
-                    <img
-                      src={winProofPreview}
-                      alt="Win proof preview"
-                      className="max-w-full h-32 object-contain border border-gray-300 rounded"
-                    />
-                  </div>
-                )}
-              </div>
-
               <p className="text-gray-600 mb-4">
                 Have you completed the match? Please submit your result honestly.
               </p>
               
+              {/* Screenshot Upload for Win Claims */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Screenshot Proof (Required for claiming victory)
+                </label>
+                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                  <div className="space-y-1 text-center">
+                    {proofPreview ? (
+                      <div className="mb-4">
+                        <img
+                          src={proofPreview}
+                          alt="Proof screenshot"
+                          className="mx-auto h-32 w-auto rounded-md"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProofShot(null);
+                            setProofPreview(null);
+                          }}
+                          className="mt-2 text-sm text-red-600 hover:text-red-800"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <div className="flex text-sm text-gray-600">
+                          <label htmlFor="proof-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                            <span>Upload a screenshot</span>
+                            <input
+                              id="proof-upload"
+                              name="proof-upload"
+                              type="file"
+                              accept="image/*"
+                              className="sr-only"
+                              onChange={handleFileChange}
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <p className="mt-2 text-sm text-gray-500">
+                  📸 Upload a clear screenshot showing your victory screen to claim the win
+                </p>
+              </div>
+
               <div className="flex space-x-4">
                 <button
                   onClick={() => handleSubmitResult('win')}
-                  disabled={submittingResult || !match || !user || !winProofScreenshot}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  disabled={submittingResult || !match || !user || !proofShot}
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={!proofShot ? 'Screenshot proof required to claim victory' : ''}
                 >
-                  {submittingResult ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span>Submitting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>🏆 I Won</span>
-                      {!winProofScreenshot && <span className="text-xs">(Screenshot Required)</span>}
-                    </>
-                  )}
+                  {submittingResult ? 'Submitting...' : 'I Won'}
                 </button>
-                
                 <button
                   onClick={() => handleSubmitResult('loss')}
                   disabled={submittingResult || !match || !user}
                   className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {submittingResult ? 'Submitting...' : '😞 I Lost'}
+                  {submittingResult ? 'Submitting...' : 'I Lost'}
                 </button>
               </div>
-            </div>
-          )}
 
-          {/* Cancel Game Option - Only show if match is not completed */}
-          {isPlayer && match && match.status !== 'completed' && match.status !== 'cancelled' && (
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Need to Cancel?</h3>
-              <p className="text-gray-600 mb-4">
-                If you're unable to complete this match due to technical issues or other problems, 
-                you can request cancellation. Admins will review your request.
-              </p>
-              <button
-                onClick={() => setShowCancelModal(true)}
-                className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-md font-medium flex items-center space-x-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Request Cancellation</span>
-              </button>
+              {/* Cancel Game Option */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  disabled={submittingResult}
+                  className="text-gray-600 hover:text-gray-800 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  🚫 Request Game Cancellation
+                </button>
+                <p className="text-xs text-gray-500 mt-1">
+                  Having issues? Request cancellation with proof for admin review
+                </p>
+              </div>
             </div>
           )}
 
@@ -685,7 +632,19 @@ export default function MatchPage({ params }: MatchPageProps) {
             </button>
           </div>
         </main>
-      </div>
+        </div>
+        
+        {/* Cancel Game Modal */}
+        <CancelGameModal
+          isOpen={showCancelModal}
+          onClose={() => setShowCancelModal(false)}
+          matchId={match?._id || ''}
+          onSuccess={() => {
+            showToast('success', 'Cancel request submitted successfully');
+            fetchMatch(); // Refresh match data
+          }}
+        />
+      </>
     );
   } catch (renderError) {
     console.error('Render error in MatchPage:', renderError);

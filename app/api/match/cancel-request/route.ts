@@ -23,18 +23,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate screenshot file
-    if (!screenshotFile.type.startsWith('image/')) {
-      return NextResponse.json(
-        { error: 'Screenshot must be an image file' },
-        { status: 400 }
-      );
-    }
+    // Validate reason
+    const validReasons = [
+      'opponent_not_responding',
+      'technical_issues', 
+      'game_crashed',
+      'unfair_play',
+      'personal_emergency',
+      'other'
+    ];
 
-    // Validate file size (max 5MB)
-    if (screenshotFile.size > 5 * 1024 * 1024) {
+    if (!validReasons.includes(reason)) {
       return NextResponse.json(
-        { error: 'Screenshot size should be less than 5MB' },
+        { error: 'Invalid cancellation reason' },
         { status: 400 }
       );
     }
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     // Connect to database
     await dbConnect();
 
-    // Check if match exists and user is a participant
+    // Verify match exists and user is a participant
     const match = await Match.findById(matchId);
     if (!match) {
       return NextResponse.json(
@@ -51,21 +52,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user is a participant in this match
-    const isPlayer1 = match.player1.toString() === authUser.userId;
-    const isPlayer2 = match.player2?.toString() === authUser.userId;
-    
-    if (!isPlayer1 && !isPlayer2) {
+    // Check if user is participant in the match
+    const isParticipant = 
+      match.player1.toString() === authUser.userId || 
+      match.player2?.toString() === authUser.userId;
+
+    if (!isParticipant) {
       return NextResponse.json(
         { error: 'You are not a participant in this match' },
         { status: 403 }
       );
     }
 
-    // Check if match can be cancelled
-    if (match.status === 'completed' || match.status === 'cancelled') {
+    // Check if match can be cancelled (not completed)
+    if (match.status === 'completed') {
       return NextResponse.json(
-        { error: 'Cannot cancel a completed or already cancelled match' },
+        { error: 'Cannot cancel a completed match' },
         { status: 400 }
       );
     }
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     if (existingRequest) {
       return NextResponse.json(
-        { error: 'There is already a pending cancel request for this match' },
+        { error: 'A cancel request is already pending for this match' },
         { status: 400 }
       );
     }
@@ -93,7 +95,7 @@ export async function POST(request: NextRequest) {
     } catch (uploadError) {
       console.error('Screenshot upload error:', uploadError);
       return NextResponse.json(
-        { error: 'Failed to upload screenshot' },
+        { error: 'Failed to upload screenshot. Please try again.' },
         { status: 500 }
       );
     }
@@ -109,12 +111,17 @@ export async function POST(request: NextRequest) {
 
     await cancelRequest.save();
 
+    // TODO: Send notification to admins about new cancel request
+    // You can implement this using your notification system
+
     return NextResponse.json({
       message: 'Cancel request submitted successfully',
       requestId: cancelRequest._id,
-    });
+    }, { status: 201 });
 
   } catch (error) {
+    console.error('Cancel request error:', error);
+    
     if (error instanceof Error && error.message === 'Unauthorized') {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -122,7 +129,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Submit cancel request error:', error);
     return NextResponse.json(
       { error: 'Failed to submit cancel request' },
       { status: 500 }
