@@ -58,70 +58,91 @@ function RegisterPageContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+      {/* Floating decorative elements */}
+      <div className="fixed top-10 left-10 float-animation opacity-20">
+        <div className="text-6xl">🎮</div>
+      </div>
+      <div className="fixed top-20 right-20 float-animation opacity-20" style={{animationDelay: '1s'}}>
+        <div className="text-5xl">🚀</div>
+      </div>
+      <div className="fixed bottom-20 right-20 float-animation opacity-20" style={{animationDelay: '2s'}}>
+        <div className="text-4xl">⭐</div>
+      </div>
+
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Register / Login
+        <div className="game-card p-8 text-center coin-animation">
+          <div className="dice-icon text-6xl mb-4">🎯</div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">
+            Join the Arena
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your details to receive OTP
+          <p className="text-purple-600 font-semibold">
+            🎮 Register to start your gaming journey
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm space-y-4">
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="game-card p-6 space-y-4">
             <div>
-              <label htmlFor="name" className="sr-only">
-                Name
+              <label htmlFor="name" className="text-sm font-bold text-gray-800 mb-2 flex items-center space-x-2">
+                <span>👤</span>
+                <span>Champion Name</span>
               </label>
               <input
                 id="name"
                 name="name"
                 type="text"
                 required
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Full Name"
+                className="w-full px-4 py-3 border-2 border-purple-300 rounded-xl placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-lg font-semibold"
+                placeholder="Enter your name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
             
             <div>
-              <label htmlFor="phone" className="sr-only">
-                Phone Number
+              <label htmlFor="phone" className="text-sm font-bold text-gray-800 mb-2 flex items-center space-x-2">
+                <span>📱</span>
+                <span>Battle Phone</span>
               </label>
               <input
                 id="phone"
                 name="phone"
                 type="tel"
                 required
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Phone Number"
+                className="w-full px-4 py-3 border-2 border-green-300 rounded-xl placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-lg font-semibold"
+                placeholder="Enter mobile number"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               />
             </div>
 
             <div>
-              <label htmlFor="referralCode" className="sr-only">
-                Referral Code (Optional)
+              <label htmlFor="referralCode" className="text-sm font-bold text-gray-800 mb-2 flex items-center space-x-2">
+                <span>🎁</span>
+                <span>Invite Code (Optional)</span>
               </label>
               <input
                 id="referralCode"
                 name="referralCode"
                 type="text"
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Referral Code (Optional)"
+                className="w-full px-4 py-3 border-2 border-yellow-300 rounded-xl placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-lg font-semibold"
+                placeholder="Friend's referral code"
                 value={formData.referralCode}
                 onChange={(e) => setFormData({ ...formData, referralCode: e.target.value.toUpperCase() })}
               />
+              <p className="mt-1 text-xs text-yellow-600 font-semibold">
+                🎁 Get bonus coins with referral code!
+              </p>
             </div>
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm text-center">
-              {error}
+            <div className="game-card p-4 bg-gradient-to-r from-red-100 to-red-200 border-2 border-red-400">
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl">⚠️</span>
+                <span className="text-red-800 font-bold">{error}</span>
+              </div>
             </div>
           )}
 
@@ -129,17 +150,28 @@ function RegisterPageContent() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full game-button text-lg font-bold py-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Sending...' : 'Send OTP'}
+              {loading ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>🚀 Sending Battle Code...</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center space-x-2">
+                  <span>⚡</span>
+                  <span>Send Battle Code</span>
+                  <span>📱</span>
+                </div>
+              )}
             </button>
           </div>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Login here
+            <p className="text-white font-semibold bg-black bg-opacity-20 rounded-lg p-3">
+              Already a champion?{' '}
+              <Link href="/auth/login" className="text-yellow-300 font-bold hover:text-yellow-200 transition-colors">
+                Login to Battle! 🎯
               </Link>
             </p>
           </div>
