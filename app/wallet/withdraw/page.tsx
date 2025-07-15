@@ -104,37 +104,54 @@ export default function WithdrawPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-emerald-600 rounded-full flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-yellow-400 mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="dice-icon text-4xl">💸</div>
+            </div>
           </div>
-          <p className="text-gray-600 font-medium">Loading wallet...</p>
+          <p className="mt-4 text-white font-semibold text-lg">Loading victory vault...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <header className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200">
+    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+      {/* Floating decorative elements */}
+      <div className="fixed top-10 left-10 float-animation opacity-20">
+        <div className="text-6xl">💸</div>
+      </div>
+      <div className="fixed top-20 right-20 float-animation opacity-20" style={{animationDelay: '1s'}}>
+        <div className="text-5xl">💎</div>
+      </div>
+      <div className="fixed bottom-20 left-20 float-animation opacity-20" style={{animationDelay: '2s'}}>
+        <div className="text-4xl">🏦</div>
+      </div>
+
+      {/* Header */}
+      <header className="sticky top-0 z-40 game-card m-2 rounded-xl">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            {/* Back Button */}
-            <button
-              onClick={() => router.back()}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <Link href="/dashboard" className="flex items-center space-x-2 text-purple-600 hover:text-purple-800 transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              <span className="font-medium">Back</span>
-            </button>
+              <span className="font-bold">Back to Arena</span>
+            </Link>
+            
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">💸</span>
+              </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Withdraw</span>
+            </div>
 
-            {/* Current Balance */}
-            <div className="bg-emerald-100 text-emerald-800 rounded-full px-3 py-1 text-sm font-semibold">
-              ₹ {user.balance}
+            <div className="bg-gradient-to-r from-green-400 to-green-600 text-white rounded-full px-3 py-1 text-sm font-bold flex items-center space-x-1">
+              <span className="coin-icon">💰</span>
+              <span>₹ {user.balance}</span>
             </div>
           </div>
         </div>
@@ -142,33 +159,38 @@ export default function WithdrawPage() {
 
       {/* Main Content */}
       <main className="px-4 py-6 space-y-6">
-        {/* Header Section */}
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">Withdraw Money</h1>
-          <p className="text-gray-600">Convert your coins to cash</p>
+        {/* Welcome Section */}
+        <div className="game-card p-6 text-center">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="dice-icon text-3xl">💸</div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Cash Out Victory!</h1>
+              <p className="text-purple-600 font-semibold">Transform your battle coins to real money! 💪</p>
+            </div>
+          </div>
         </div>
 
         {/* Balance Card */}
-        <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl p-6 text-white">
+        <div className="game-card p-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white">
           <div className="flex items-center space-x-3 mb-4">
             <span className="text-2xl">💰</span>
-            <h3 className="text-lg font-semibold">Available Balance</h3>
+            <h3 className="text-lg font-semibold">Victory Vault Balance</h3>
           </div>
           
           <div className="space-y-3">
             <div>
-              <p className="text-3xl font-bold">{user.balance} Coins</p>
-              <p className="text-green-100">= ₹{user.balance}</p>
+              <p className="text-3xl font-bold">{user.balance} Battle Coins</p>
+              <p className="text-green-100 font-semibold">= ₹{user.balance} Real Money</p>
             </div>
             
             <div className="bg-white/20 rounded-lg p-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="opacity-90">Min withdrawal:</span>
-                <span className="font-semibold">10 coins</span>
+                <span className="opacity-90 font-semibold">⚡ Min withdrawal:</span>
+                <span className="font-bold">10 coins</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="opacity-90">Processing time:</span>
-                <span className="font-semibold">24-48 hours</span>
+                <span className="opacity-90 font-semibold">⏱️ Processing time:</span>
+                <span className="font-bold">24-48 hours</span>
               </div>
             </div>
           </div>
@@ -176,34 +198,35 @@ export default function WithdrawPage() {
 
         {/* Success Message */}
         {success && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+          <div className="game-card p-4 bg-gradient-to-r from-green-100 to-green-200 border-2 border-green-400 coin-animation">
             <div className="flex items-center space-x-2">
-              <span className="text-green-500">✅</span>
-              <span className="text-green-700 font-medium">{success}</span>
+              <span className="text-2xl">🎉</span>
+              <span className="text-green-800 font-bold">{success}</span>
             </div>
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="game-card p-4 bg-gradient-to-r from-red-100 to-red-200 border-2 border-red-400">
             <div className="flex items-center space-x-2">
-              <span className="text-red-500">⚠️</span>
-              <span className="text-red-700 font-medium">{error}</span>
+              <span className="text-2xl">⚠️</span>
+              <span className="text-red-800 font-bold">{error}</span>
             </div>
           </div>
         )}
 
         {/* Withdrawal Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
+          <div className="game-card p-6 space-y-6">
             {/* Amount Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                💸 Amount to Withdraw
+              <label className="text-lg font-bold text-gray-800 mb-3 flex items-center space-x-2">
+                <span className="coin-icon text-xl">💸</span>
+                <span>Victory Cash Out Amount</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg">🪙</span>
+                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 text-xl font-bold">🪙</span>
                 <input
                   type="number"
                   value={amount}
@@ -211,20 +234,23 @@ export default function WithdrawPage() {
                   placeholder="0"
                   min="10"
                   max={user.balance}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg"
+                  className="w-full pl-12 pr-16 py-4 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-xl font-bold text-center text-black bg-white shadow-lg"
                   required
                 />
-                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">coins</span>
+                <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 text-sm font-bold">coins</span>
               </div>
-              <p className="mt-2 text-sm text-gray-600">
-                You will receive <span className="font-semibold text-emerald-600">₹{amount || '0'}</span>
+              <p className="mt-2 text-sm text-purple-600 text-center font-semibold">
+                💰 You will receive <span className="text-green-600 font-bold">₹{amount || '0'} real money</span>
               </p>
             </div>
 
             {/* Quick Amount Selection */}
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-3">Quick Select</p>
-              <div className="grid grid-cols-4 gap-2">
+              <p className="text-lg font-bold text-gray-800 mb-3 flex items-center space-x-2">
+                <span>⚡</span>
+                <span>Quick Cash Out</span>
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[100, 250, 500, user.balance].filter(value => value <= user.balance && value >= 10).map((value) => (
                   <button
                     key={value}

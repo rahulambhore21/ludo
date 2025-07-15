@@ -128,12 +128,15 @@ export default function ReferralsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-emerald-600 rounded-full flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-yellow-400 mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="dice-icon text-4xl">👥</div>
+            </div>
           </div>
-          <p className="text-gray-600 font-medium">Loading referrals...</p>
+          <p className="mt-4 text-white font-semibold text-lg">Loading referral empire...</p>
         </div>
       </div>
     );
@@ -141,63 +144,85 @@ export default function ReferralsPage() {
 
   if (!referralData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center p-6">
-          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-            <span className="text-2xl">⚠️</span>
+      <div className="min-h-screen flex items-center justify-center" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+        <div className="text-center">
+          <div className="game-card p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">
+              {error || 'Failed to load referral empire data'}
+            </h2>
+            <button 
+              onClick={fetchReferralData}
+              className="game-button px-6 py-3 text-lg font-bold rounded-xl"
+            >
+              🔄 Try Again
+            </button>
           </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            {error || 'Failed to load referral data'}
-          </h2>
-          <button 
-            onClick={fetchReferralData}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
-          >
-            Try Again
-          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <header className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200">
+    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+      {/* Floating decorative elements */}
+      <div className="fixed top-10 left-10 float-animation opacity-20">
+        <div className="text-6xl">👑</div>
+      </div>
+      <div className="fixed top-20 right-20 float-animation opacity-20" style={{animationDelay: '1s'}}>
+        <div className="text-5xl">💎</div>
+      </div>
+      <div className="fixed bottom-20 left-20 float-animation opacity-20" style={{animationDelay: '2s'}}>
+        <div className="text-4xl">🏆</div>
+      </div>
+
+      {/* Header */}
+      <header className="sticky top-0 z-40 game-card m-2 rounded-xl">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            {/* Back Button */}
             <button
               onClick={() => router.back()}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+              className="flex items-center space-x-2 text-purple-600 hover:text-purple-800 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              <span className="font-medium">Back</span>
+              <span className="font-bold">Back to Arena</span>
             </button>
-
-            {/* Title */}
-            <h1 className="text-lg font-semibold text-gray-900">Refer & Earn</h1>
             
-            {/* Empty space for balance */}
-            <div className="w-6"></div>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">👥</span>
+              </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Referral Empire</span>
+            </div>
+
+            <div className="bg-gradient-to-r from-green-400 to-green-600 text-white rounded-full px-3 py-1 text-sm font-bold flex items-center space-x-1">
+              <span className="coin-icon">💰</span>
+              <span>₹ {referralData?.totalEarnings || 0}</span>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="px-4 py-6 space-y-6">
-        {/* Header Section */}
-        <div className="text-center space-y-2">
-          <div className="text-4xl mb-3">🤝</div>
-          <h1 className="text-2xl font-bold text-gray-900">Invite Friends</h1>
-          <p className="text-gray-600">Earn 1% from every match they win!</p>
+        {/* Welcome Section */}
+        <div className="game-card p-6 text-center">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="dice-icon text-3xl">👑</div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Build Your Empire!</h1>
+              <p className="text-purple-600 font-semibold">Invite friends & earn from their victories! 💪</p>
+            </div>
+          </div>
         </div>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white text-center">
+          <div className="game-card p-4 bg-gradient-to-br from-blue-500 to-blue-600 text-white text-center">
             <div className="text-2xl mb-1">👥</div>
             <div className="text-2xl font-bold">{referralData.totalReferrals}</div>
             <div className="text-xs text-blue-100">Friends</div>

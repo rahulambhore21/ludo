@@ -241,7 +241,7 @@ export default function CreateMatchPage() {
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                 placeholder="ENTER CODE"
-                className="w-full px-4 py-4 border-2 border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-xl font-bold text-center bg-white shadow-lg"
+                className="w-full px-4 py-4 border-2 border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-xl font-bold text-center bg-white text-black shadow-lg"
                 required
                 maxLength={6}
               />
@@ -263,7 +263,7 @@ export default function CreateMatchPage() {
                   value={entryFee}
                   onChange={(e) => setEntryFee(e.target.value)}
                   placeholder="0"
-                  className="w-full pl-10 pr-4 py-4 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-xl font-bold text-center bg-white shadow-lg"
+                  className="w-full pl-10 pr-4 py-4 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-xl font-bold text-center text-black bg-white shadow-lg"
                   required
                   min="1"
                   max={user.balance}

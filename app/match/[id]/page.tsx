@@ -349,7 +349,7 @@ export default function MatchPage({ params }: MatchPageProps) {
 
         <main className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           {/* Match Info */}
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <div className="bg-white text-black shadow rounded-lg p-6 mb-6">
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-2xl font-bold text-gray-900">Match #{match?._id?.slice(-6) || 'Unknown'}</h2>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -365,19 +365,19 @@ export default function MatchPage({ params }: MatchPageProps) {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500">Entry Fee:</span>
-                <span className="ml-2 font-medium">₹{match?.entryFee || 0}</span>
+                <span className="ml-2 text-black font-medium">₹{match?.entryFee || 0}</span>
               </div>
               <div>
                 <span className="text-gray-500">Prize Pool:</span>
-                <span className="ml-2 font-medium">₹{match?.pot || 0}</span>
+                <span className="ml-2 text-black font-medium">₹{match?.pot || 0}</span>
               </div>
               <div>
                 <span className="text-gray-500">Room Code:</span>
-                <span className="ml-2 font-medium">{match?.roomCode || 'N/A'}</span>
+                <span className="ml-2 text-black font-medium">{match?.roomCode || 'N/A'}</span>
               </div>
               <div>
                 <span className="text-gray-500">Created:</span>
-                <span className="ml-2 font-medium">
+                <span className="ml-2 text-black font-medium">
                   {match?.createdAt ? new Date(match.createdAt).toLocaleDateString() : 'Unknown'}
                 </span>
               </div>
@@ -385,7 +385,7 @@ export default function MatchPage({ params }: MatchPageProps) {
           </div>
 
           {/* Players */}
-          <div className="bg-white shadow rounded-lg p-6 mb-6">
+          <div className="bg-white text-black shadow rounded-lg p-6 mb-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Players</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -512,17 +512,18 @@ export default function MatchPage({ params }: MatchPageProps) {
                 >
                   {submittingResult ? 'Submitting...' : 'I Lost'}
                 </button>
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  disabled={submittingResult}
+                  className="bg-amber-300 hover:bg-red-700 text-white px-6 py-2 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+             Game Cancellation
+                </button>
               </div>
 
               {/* Cancel Game Option */}
               <div className="mt-4 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => setShowCancelModal(true)}
-                  disabled={submittingResult}
-                  className="text-gray-600 hover:text-gray-800 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  🚫 Request Game Cancellation
-                </button>
+                
                 <p className="text-xs text-gray-500 mt-1">
                   Having issues? Request cancellation with proof for admin review
                 </p>

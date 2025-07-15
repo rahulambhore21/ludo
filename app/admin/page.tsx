@@ -85,22 +85,22 @@ export default function AdminDashboard() {
   return (
     <AdminLayout title="Dashboard">
       {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Total Users */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-bold">👥</span>
                 </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-3 sm:ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                     Total Users
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg sm:text-xl font-medium text-gray-900">
                     {stats?.totalUsers || 0}
                   </dd>
                 </dl>
@@ -111,19 +111,19 @@ export default function AdminDashboard() {
 
         {/* Total Coins in System */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-bold">💰</span>
                 </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-3 sm:ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                     Coins in System
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg sm:text-xl font-medium text-gray-900">
                     {stats?.totalCoinsInSystem || 0}
                   </dd>
                 </dl>
@@ -134,19 +134,19 @@ export default function AdminDashboard() {
 
         {/* Platform Earnings */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-bold">💎</span>
                 </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-3 sm:ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                     Platform Earnings
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg sm:text-xl font-medium text-gray-900">
                     {stats?.totalPlatformEarnings || 0}
                   </dd>
                 </dl>
@@ -157,19 +157,19 @@ export default function AdminDashboard() {
 
         {/* Transactions Today */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-sm font-bold">📈</span>
                 </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-3 sm:ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                     Transactions Today
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-lg sm:text-xl font-medium text-gray-900">
                     {stats?.transactionsToday || 0}
                   </dd>
                 </dl>
@@ -180,29 +180,29 @@ export default function AdminDashboard() {
       </div>
 
       {/* Pending Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Pending Deposits */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
+          <div className="px-4 py-4 sm:px-4 sm:py-5 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900">
                   Pending Deposits
                 </h3>
-                <p className="mt-1 text-3xl font-semibold text-green-600">
+                <p className="mt-1 text-2xl sm:text-3xl font-semibold text-green-600">
                   {stats?.pendingDeposits || 0}
                 </p>
               </div>
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 text-lg">↓</span>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-green-600 text-base sm:text-lg">↓</span>
                 </div>
               </div>
             </div>
-            <div className="mt-4">
+            <div className="mt-3 sm:mt-4">
               <a
                 href="/admin/transactions?filter=deposit&status=pending"
-                className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+                className="text-indigo-600 hover:text-indigo-500 text-xs sm:text-sm font-medium"
               >
                 Review deposits →
               </a>
@@ -212,26 +212,26 @@ export default function AdminDashboard() {
 
         {/* Pending Withdrawals */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
+          <div className="px-4 py-4 sm:px-4 sm:py-5 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900">
                   Pending Withdrawals
                 </h3>
-                <p className="mt-1 text-3xl font-semibold text-red-600">
+                <p className="mt-1 text-2xl sm:text-3xl font-semibold text-red-600">
                   {stats?.pendingWithdrawals || 0}
                 </p>
               </div>
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <span className="text-red-600 text-lg">↑</span>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <span className="text-red-600 text-base sm:text-lg">↑</span>
                 </div>
               </div>
             </div>
-            <div className="mt-4">
+            <div className="mt-3 sm:mt-4">
               <a
                 href="/admin/transactions?filter=withdrawal&status=pending"
-                className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+                className="text-indigo-600 hover:text-indigo-500 text-xs sm:text-sm font-medium"
               >
                 Review withdrawals →
               </a>
@@ -241,26 +241,26 @@ export default function AdminDashboard() {
 
         {/* Match Conflicts */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
+          <div className="px-4 py-4 sm:px-4 sm:py-5 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900">
                   Match Conflicts
                 </h3>
-                <p className="mt-1 text-3xl font-semibold text-orange-600">
+                <p className="mt-1 text-2xl sm:text-3xl font-semibold text-orange-600">
                   {stats?.conflictsPending || 0}
                 </p>
               </div>
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                  <span className="text-orange-600 text-lg">⚔️</span>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <span className="text-orange-600 text-base sm:text-lg">⚔️</span>
                 </div>
               </div>
             </div>
-            <div className="mt-4">
+            <div className="mt-3 sm:mt-4">
               <a
                 href="/admin/matches"
-                className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+                className="text-indigo-600 hover:text-indigo-500 text-xs sm:text-sm font-medium"
               >
                 Resolve conflicts →
               </a>
@@ -271,32 +271,32 @@ export default function AdminDashboard() {
 
       {/* Quick Actions */}
       <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+        <div className="px-4 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6">
+          <h3 className="text-base sm:text-lg leading-6 font-medium text-gray-900 mb-3 sm:mb-4">
             Quick Actions
           </h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
             <a
               href="/admin/transactions"
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center block"
+              className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm font-medium text-center block"
             >
               Review Transactions
             </a>
             <a
               href="/admin/matches"
-              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center block"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm font-medium text-center block"
             >
               Resolve Conflicts
             </a>
             <a
               href="/admin/users"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium text-center block"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm font-medium text-center block"
             >
               Manage Users
             </a>
             <button
               onClick={fetchAdminStats}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm font-medium"
             >
               Refresh Stats
             </button>

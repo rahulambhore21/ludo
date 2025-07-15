@@ -9,6 +9,7 @@ function RegisterPageContent() {
     name: '',
     phone: '',
     referralCode: '',
+    agreeToTerms: false, // Add terms agreement field
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -28,6 +29,13 @@ function RegisterPageContent() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Validate terms agreement
+    if (!formData.agreeToTerms) {
+      setError('You must agree to the Terms of Service to continue');
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch('/api/auth/send-otp', {
@@ -134,6 +142,38 @@ function RegisterPageContent() {
               <p className="mt-1 text-xs text-yellow-600 font-semibold">
                 🎁 Get bonus coins with referral code!
               </p>
+            </div>
+
+            {/* Terms Agreement Checkbox */}
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+              <label className="flex items-start space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.agreeToTerms}
+                  onChange={(e) => setFormData({ ...formData, agreeToTerms: e.target.checked })}
+                  className="mt-1 w-5 h-5 text-blue-600 border-2 border-blue-300 rounded focus:ring-blue-500"
+                  required
+                />
+                <div className="text-sm">
+                  <span className="text-gray-800 font-semibold">
+                    I agree to the{' '}
+                    <Link href="/legal/terms-of-service" target="_blank" className="text-blue-600 hover:text-blue-800 underline font-bold">
+                      Terms of Service
+                    </Link>
+                    {', '}
+                    <Link href="/legal/privacy-policy" target="_blank" className="text-blue-600 hover:text-blue-800 underline font-bold">
+                      Privacy Policy
+                    </Link>
+                    {', and '}
+                    <Link href="/legal/fair-play-policy" target="_blank" className="text-blue-600 hover:text-blue-800 underline font-bold">
+                      Fair Play Policy
+                    </Link>
+                  </span>
+                  <p className="text-xs text-gray-600 mt-1">
+                    📋 By checking this box, you confirm that you are 18+ years old and agree to our platform policies.
+                  </p>
+                </div>
+              </label>
             </div>
           </div>
 

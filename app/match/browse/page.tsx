@@ -146,43 +146,60 @@ export default function BrowseMatchesPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-emerald-600 rounded-full flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-yellow-400 mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="dice-icon text-4xl">⚔️</div>
+            </div>
           </div>
-          <p className="text-gray-600 font-medium">Loading matches...</p>
+          <p className="mt-4 text-white font-semibold text-lg">Searching for worthy opponents...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <header className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200">
+    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+      {/* Floating decorative elements */}
+      <div className="fixed top-10 left-10 float-animation opacity-20">
+        <div className="text-6xl">⚔️</div>
+      </div>
+      <div className="fixed top-20 right-20 float-animation opacity-20" style={{animationDelay: '1s'}}>
+        <div className="text-5xl">🏆</div>
+      </div>
+      <div className="fixed bottom-20 left-20 float-animation opacity-20" style={{animationDelay: '2s'}}>
+        <div className="text-4xl">🎯</div>
+      </div>
+
+      {/* Header */}
+      <header className="sticky top-0 z-40 game-card m-2 rounded-xl">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            {/* Back Button */}
-            <button
-              onClick={() => router.back()}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <Link href="/dashboard" className="flex items-center space-x-2 text-purple-600 hover:text-purple-800 transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              <span className="font-medium">Back</span>
-            </button>
+              <span className="font-bold">Back to Arena</span>
+            </Link>
+            
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">⚔️</span>
+              </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Battle Arena</span>
+            </div>
 
-            {/* Balance & Refresh */}
             <div className="flex items-center space-x-3">
-              <div className="bg-emerald-100 text-emerald-800 rounded-full px-3 py-1 text-sm font-semibold">
-                ₹ {user.balance}
+              <div className="bg-gradient-to-r from-green-400 to-green-600 text-white rounded-full px-3 py-1 text-sm font-bold flex items-center space-x-1">
+                <span className="coin-icon">💰</span>
+                <span>₹ {user.balance}</span>
               </div>
               <button
                 onClick={fetchMatches}
                 disabled={refreshing}
-                className="p-2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                className="p-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors disabled:opacity-50"
               >
                 <svg className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -195,10 +212,15 @@ export default function BrowseMatchesPage() {
 
       {/* Main Content */}
       <main className="px-4 py-6 space-y-6">
-        {/* Header Section */}
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">Available Matches</h1>
-          <p className="text-gray-600">Join a match and start playing!</p>
+        {/* Welcome Section */}
+        <div className="game-card p-6 text-center">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="dice-icon text-3xl">⚔️</div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Battle Arena</h1>
+              <p className="text-purple-600 font-semibold">Choose your opponent & claim victory! 🏆</p>
+            </div>
+          </div>
         </div>
 
         {/* Quick Create Button */}

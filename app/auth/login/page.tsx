@@ -45,59 +45,101 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Login to Your Account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your phone number to receive OTP
-          </p>
-        </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="phone" className="sr-only">
-              Phone Number
-            </label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              required
-              className="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Phone Number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
+    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+      {/* Floating decorative elements */}
+      <div className="fixed top-10 left-10 float-animation opacity-20">
+        <div className="text-6xl">🎮</div>
+      </div>
+      <div className="fixed top-20 right-20 float-animation opacity-20" style={{animationDelay: '1s'}}>
+        <div className="text-5xl">🎯</div>
+      </div>
+      <div className="fixed bottom-20 left-20 float-animation opacity-20" style={{animationDelay: '2s'}}>
+        <div className="text-4xl">🏆</div>
+      </div>
 
-          {error && (
-            <div className="text-red-600 text-sm text-center">
-              {error}
+      <div className="flex items-center justify-center min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          {/* Header */}
+          <div className="game-card p-8 text-center">
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white text-2xl">🎲</span>
+              </div>
             </div>
-          )}
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Sending...' : 'Send OTP'}
-            </button>
-          </div>
-
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link href="/auth/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Register here
-              </Link>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+              Welcome Back, Champion! 🏆
+            </h2>
+            <p className="text-gray-600 font-semibold">
+              🚀 Ready to dominate the arena? Let's get you logged in!
             </p>
           </div>
-        </form>
+          
+          {/* Login Form */}
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="game-card p-6 space-y-4">
+              <div>
+                <label className="text-lg font-bold text-gray-800 mb-3 flex items-center space-x-2">
+                  <span className="text-xl">📱</span>
+                  <span>Phone Number</span>
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  className="w-full px-4 py-4 border-2 border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-lg font-bold text-center bg-white text-black shadow-lg"
+                  placeholder="Enter your phone number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+                <p className="mt-2 text-sm text-purple-600 text-center font-semibold">
+                  🔐 We'll send you a secure OTP
+                </p>
+              </div>
+
+              {error && (
+                <div className="bg-red-100 border border-red-400 rounded-lg p-3">
+                  <div className="text-red-700 text-sm text-center font-semibold flex items-center justify-center space-x-2">
+                    <span>❌</span>
+                    <span>{error}</span>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="game-button w-full text-lg font-bold rounded-xl py-4 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <span className="animate-spin">⏳</span>
+                    <span>Sending Magic Code...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>⚡</span>
+                    <span>Send OTP</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* Footer */}
+          <div className="game-card p-4 text-center">
+            <p className="text-gray-600 font-semibold flex items-center justify-center space-x-2">
+              <span>🆕</span>
+              <span>New to the arena?</span>
+            </p>
+            <Link 
+              href="/auth/register" 
+              className="mt-2 inline-block bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold px-6 py-2 rounded-lg transition-all duration-300 hover:shadow-lg"
+            >
+              🚀 Join the Battle!
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );

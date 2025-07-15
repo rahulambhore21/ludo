@@ -8,6 +8,8 @@ export interface ICancelRequest extends mongoose.Document {
   status: 'pending' | 'approved' | 'rejected';
   reviewedBy?: mongoose.Types.ObjectId;
   reviewNote?: string;
+  adminNotes?: string; // Add admin notes field
+  conflictReason?: string; // Add conflict reason field
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,6 +52,14 @@ const CancelRequestSchema = new mongoose.Schema<ICancelRequest>({
     required: false,
   },
   reviewNote: {
+    type: String,
+    required: false,
+  },
+  adminNotes: {
+    type: String,
+    required: false,
+  },
+  conflictReason: {
     type: String,
     required: false,
   },

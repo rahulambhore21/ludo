@@ -262,7 +262,7 @@ export default function AdminMatches() {
         )}
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white text-black rounded-lg shadow p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <input
@@ -438,9 +438,9 @@ export default function AdminMatches() {
                   </button>
                 </div>
 
-                <div className="space-y-6">
+                <div className=" text-black space-y-6">
                   {/* Match Information */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="bg-gray-50 text-black p-4 rounded-lg">
                     <h4 className="font-semibold mb-2">Match Information</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>

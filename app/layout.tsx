@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { NotificationProvider } from "../contexts/NotificationContext";
 import { Toaster } from "react-hot-toast";
+import OfflineBanner from "../components/OfflineBanner";
+import Footer from "../components/Footer";
+import AgeDisclaimer from "../components/AgeDisclaimer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,10 +28,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.className} antialiased`}
+        className={`${inter.className} antialiased flex flex-col min-h-screen`}
       >
         <NotificationProvider>
-          {children}
+          <AgeDisclaimer />
+          <OfflineBanner />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
           <Toaster />
         </NotificationProvider>
       </body>

@@ -123,25 +123,25 @@ function AdminTransactionsContent() {
     <AdminLayout title="Transaction Management">
       {/* Filters */}
       <div className="bg-white shadow rounded-lg p-4 mb-6">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div>
+        <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+          <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value as any)}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm"
             >
               <option value="all">All Types</option>
               <option value="deposit">Deposits</option>
               <option value="withdrawal">Withdrawals</option>
             </select>
           </div>
-          <div>
+          <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as any)}
-              className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="w-full sm:w-auto border border-gray-300 rounded-md px-3 py-2 text-sm"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -149,10 +149,10 @@ function AdminTransactionsContent() {
               <option value="rejected">Rejected</option>
             </select>
           </div>
-          <div className="flex-1"></div>
+          <div className="sm:flex-1"></div>
           <button
             onClick={fetchTransactions}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm"
+            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm"
           >
             Refresh
           </button>
@@ -166,10 +166,10 @@ function AdminTransactionsContent() {
         </div>
       )}
 
-      {/* Transactions Table */}
+      {/* Transactions */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">
+        <div className="px-4 py-4 sm:px-6 border-b border-gray-200">
+          <h3 className="text-base sm:text-lg font-medium text-gray-900">
             Transactions ({filteredTransactions.length})
           </h3>
         </div>
@@ -183,75 +183,56 @@ function AdminTransactionsContent() {
             <div className="text-gray-500">No transactions found</div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Details
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+          <>
+            {/* Mobile Card Layout */}
+            <div className="block md:hidden">
+              <div className="divide-y divide-gray-200">
                 {filteredTransactions.map((transaction) => (
-                  <tr key={transaction._id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
+                  <div key={transaction._id} className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
                         <div className="text-sm font-medium text-gray-900">
                           {transaction.userId?.name || 'System'}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-xs text-gray-500">
                           {transaction.userId?.phone || 'N/A'}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`text-sm font-medium ${getTypeColor(transaction.type)}`}>
-                        {transaction.type === 'deposit' ? '↓ Deposit' : '↑ Withdrawal'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-bold text-gray-900">
-                        {transaction.amount} coins
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(transaction.status)}`}>
                         {transaction.status}
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Type</div>
+                        <span className={`text-sm font-medium ${getTypeColor(transaction.type)}`}>
+                          {transaction.type === 'deposit' ? '↓ Deposit' : '↑ Withdrawal'}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Amount</div>
+                        <span className="text-sm font-bold text-gray-900">
+                          {transaction.amount} coins
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mb-3">
+                      <div className="text-xs text-gray-500 mb-1">Details</div>
                       <div className="text-sm text-gray-900">
                         {transaction.type === 'deposit' && transaction.proofUrl && (
                           <a
                             href={transaction.proofUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-indigo-600 hover:text-indigo-500"
+                            className="text-indigo-600 hover:text-indigo-500 text-xs"
                           >
                             View Proof
                           </a>
                         )}
                         {transaction.type === 'withdrawal' && (
-                          <div>UPI: {transaction.upiId}</div>
+                          <div className="text-xs">UPI: {transaction.upiId}</div>
                         )}
                         {transaction.description && (
                           <div className="text-xs text-gray-500 mt-1">
@@ -259,43 +240,158 @@ function AdminTransactionsContent() {
                           </div>
                         )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(transaction.createdAt).toLocaleDateString('en-IN', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {transaction.status === 'pending' ? (
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-gray-500">
+                        {new Date(transaction.createdAt).toLocaleDateString('en-IN', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                      
+                      {transaction.status === 'pending' && (
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleTransactionAction(transaction._id, 'approve')}
                             disabled={processingTransaction === transaction._id}
-                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs disabled:opacity-50"
+                            className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs disabled:opacity-50"
                           >
                             {processingTransaction === transaction._id ? 'Processing...' : 'Approve'}
                           </button>
                           <button
                             onClick={() => handleTransactionAction(transaction._id, 'reject')}
                             disabled={processingTransaction === transaction._id}
-                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs disabled:opacity-50"
+                            className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs disabled:opacity-50"
                           >
                             Reject
                           </button>
                         </div>
-                      ) : (
-                        <span className="text-gray-400">No actions</span>
                       )}
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </div>
+
+            {/* Desktop Table Layout */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      User
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Details
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredTransactions.map((transaction) => (
+                    <tr key={transaction._id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {transaction.userId?.name || 'System'}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {transaction.userId?.phone || 'N/A'}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`text-sm font-medium ${getTypeColor(transaction.type)}`}>
+                          {transaction.type === 'deposit' ? '↓ Deposit' : '↑ Withdrawal'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm font-bold text-gray-900">
+                          {transaction.amount} coins
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(transaction.status)}`}>
+                          {transaction.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">
+                          {transaction.type === 'deposit' && transaction.proofUrl && (
+                            <a
+                              href={transaction.proofUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-indigo-600 hover:text-indigo-500"
+                            >
+                              View Proof
+                            </a>
+                          )}
+                          {transaction.type === 'withdrawal' && (
+                            <div>UPI: {transaction.upiId}</div>
+                          )}
+                          {transaction.description && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {transaction.description}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(transaction.createdAt).toLocaleDateString('en-IN', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {transaction.status === 'pending' ? (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleTransactionAction(transaction._id, 'approve')}
+                              disabled={processingTransaction === transaction._id}
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs disabled:opacity-50"
+                            >
+                              {processingTransaction === transaction._id ? 'Processing...' : 'Approve'}
+                            </button>
+                            <button
+                              onClick={() => handleTransactionAction(transaction._id, 'reject')}
+                              disabled={processingTransaction === transaction._id}
+                              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs disabled:opacity-50"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">No actions</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </AdminLayout>

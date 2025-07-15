@@ -128,37 +128,54 @@ export default function DepositPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-emerald-600 rounded-full flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-yellow-400 mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="dice-icon text-4xl">💰</div>
+            </div>
           </div>
-          <p className="text-gray-600 font-medium">Loading wallet...</p>
+          <p className="mt-4 text-white font-semibold text-lg">Loading wallet magic...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <header className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200">
+    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+      {/* Floating decorative elements */}
+      <div className="fixed top-10 left-10 float-animation opacity-20">
+        <div className="text-6xl">💰</div>
+      </div>
+      <div className="fixed top-20 right-20 float-animation opacity-20" style={{animationDelay: '1s'}}>
+        <div className="text-5xl">💎</div>
+      </div>
+      <div className="fixed bottom-20 left-20 float-animation opacity-20" style={{animationDelay: '2s'}}>
+        <div className="text-4xl">🚀</div>
+      </div>
+
+      {/* Header */}
+      <header className="sticky top-0 z-40 game-card m-2 rounded-xl">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            {/* Back Button */}
-            <button
-              onClick={() => router.back()}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <Link href="/dashboard" className="flex items-center space-x-2 text-purple-600 hover:text-purple-800 transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              <span className="font-medium">Back</span>
-            </button>
+              <span className="font-bold">Back to Arena</span>
+            </Link>
+            
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">💰</span>
+              </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Add Coins</span>
+            </div>
 
-            {/* Current Balance */}
-            <div className="bg-emerald-100 text-emerald-800 rounded-full px-3 py-1 text-sm font-semibold">
-              ₹ {user.balance}
+            <div className="bg-gradient-to-r from-green-400 to-green-600 text-white rounded-full px-3 py-1 text-sm font-bold flex items-center space-x-1">
+              <span className="coin-icon">💰</span>
+              <span>₹ {user.balance}</span>
             </div>
           </div>
         </div>
@@ -166,35 +183,43 @@ export default function DepositPage() {
 
       {/* Main Content */}
       <main className="px-4 py-6 space-y-6">
-        {/* Header Section */}
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">Add Coins</h1>
-          <p className="text-gray-600">Fund your wallet to play matches</p>
+        {/* Welcome Section */}
+        <div className="game-card p-6 text-center">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="dice-icon text-3xl">💸</div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Power Up Your Wallet!</h1>
+              <p className="text-purple-600 font-semibold">Add coins to dominate the arena! 💪</p>
+            </div>
+          </div>
         </div>
 
         {/* Payment Details Card */}
-        <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-6 text-white">
+        <div className="game-card p-6 bg-gradient-to-br from-blue-500 to-purple-600 text-white">
           <div className="flex items-center space-x-3 mb-4">
             <span className="text-2xl">💳</span>
-            <h3 className="text-lg font-semibold">Payment Details</h3>
+            <h3 className="text-lg font-semibold">Battle Fund Transfer Details</h3>
           </div>
           
           <div className="space-y-4">
             <div className="bg-white/20 rounded-lg p-4">
-              <p className="text-sm opacity-90 mb-1">UPI ID</p>
+              <p className="text-sm opacity-90 mb-1 font-semibold">🎯 UPI ID</p>
               <div className="flex items-center justify-between">
-                <p className="text-lg font-mono font-semibold">ludo@paytm</p>
+                <p className="text-lg font-mono font-bold">ludo@paytm</p>
                 <button
-                  onClick={() => navigator.clipboard.writeText('ludo@paytm')}
-                  className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-md text-sm transition-colors"
+                  onClick={() => {
+                    navigator.clipboard.writeText('ludo@paytm');
+                    showToast('success', 'UPI ID copied! 📋');
+                  }}
+                  className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-md text-sm transition-colors font-bold"
                 >
-                  Copy
+                  📋 Copy
                 </button>
               </div>
             </div>
             
             <div className="bg-white/20 rounded-lg p-4 text-center">
-              <p className="text-sm opacity-90 mb-2">QR Code</p>
+              <p className="text-sm opacity-90 mb-2 font-semibold">📱 QR Code</p>
               <div className="w-32 h-32 mx-auto bg-white/30 rounded-lg flex items-center justify-center">
                 <span className="text-4xl">📱</span>
               </div>
@@ -202,68 +227,72 @@ export default function DepositPage() {
             </div>
             
             <div className="bg-yellow-400/20 border border-yellow-300/30 rounded-lg p-3 text-center">
-              <p className="font-semibold">₹1 = 1 Coin</p>
+              <p className="font-bold text-yellow-800">⚡ ₹1 = 1 Battle Coin ⚡</p>
             </div>
           </div>
         </div>
 
         {/* Success Message */}
         {success && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+          <div className="game-card p-4 bg-gradient-to-r from-green-100 to-green-200 border-2 border-green-400 coin-animation">
             <div className="flex items-center space-x-2">
-              <span className="text-green-500">✅</span>
-              <span className="text-green-700 font-medium">{success}</span>
+              <span className="text-2xl">🎉</span>
+              <span className="text-green-800 font-bold">{success}</span>
             </div>
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="game-card p-4 bg-gradient-to-r from-red-100 to-red-200 border-2 border-red-400">
             <div className="flex items-center space-x-2">
-              <span className="text-red-500">⚠️</span>
-              <span className="text-red-700 font-medium">{error}</span>
+              <span className="text-2xl">⚠️</span>
+              <span className="text-red-800 font-bold">{error}</span>
             </div>
           </div>
         )}
 
         {/* Deposit Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
+          <div className="game-card p-6 space-y-6">
             {/* Amount Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                💰 Amount to Add
+              <label className="text-lg font-bold text-gray-800 mb-3 flex items-center space-x-2">
+                <span className="coin-icon text-xl">💰</span>
+                <span>Battle Fund Amount</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg">₹</span>
+                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600 text-xl font-bold">₹</span>
                 <input
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0"
-                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg"
+                  className="w-full pl-10 pr-4 py-4 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-xl font-bold text-center text-black bg-white shadow-lg"
                   required
                   min="1"
                 />
               </div>
-              <p className="mt-2 text-sm text-gray-600">
-                You will receive <span className="font-semibold text-emerald-600">{amount || '0'} coins</span>
+              <p className="mt-2 text-sm text-purple-600 text-center font-semibold">
+                💎 You will receive <span className="text-green-600 font-bold">{amount || '0'} Battle Coins</span>
               </p>
             </div>
 
             {/* Quick Amount Selection */}
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-3">Quick Select</p>
-              <div className="grid grid-cols-4 gap-2">
+              <p className="text-lg font-bold text-gray-800 mb-3 flex items-center space-x-2">
+                <span>⚡</span>
+                <span>Quick Battle Fund</span>
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[100, 250, 500, 1000].map((value) => (
                   <button
                     key={value}
                     type="button"
                     onClick={() => setAmount(value.toString())}
-                    className="p-3 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border"
+                    className="bg-gradient-to-r from-purple-400 to-purple-600 hover:from-purple-500 hover:to-purple-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 hover:shadow-lg"
                   >
-                    ₹{value}
+                    💰₹{value}
                   </button>
                 ))}
               </div>
@@ -271,19 +300,23 @@ export default function DepositPage() {
 
             {/* Upload Payment Proof */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                📸 Payment Screenshot
+              <label className="text-lg font-bold text-gray-800 mb-3 flex items-center space-x-2">
+                <span className="text-xl">📸</span>
+                <span>Payment Victory Screenshot</span>
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-emerald-400 transition-colors">
+              <div className="border-2 border-dashed border-purple-300 rounded-xl p-6 text-center hover:border-purple-500 transition-colors bg-purple-50">
                 {previewUrl ? (
                   <div className="space-y-3">
                     <img 
                       src={previewUrl} 
                       alt="Payment proof preview" 
-                      className="mx-auto max-h-40 rounded-lg shadow-sm"
+                      className="mx-auto max-h-40 rounded-lg shadow-lg border-2 border-purple-200"
                     />
                     <div className="flex items-center justify-center space-x-2">
-                      <span className="text-green-600 text-sm font-medium">✓ Image uploaded</span>
+                      <span className="text-green-600 text-sm font-bold flex items-center space-x-1">
+                        <span>✅</span>
+                        <span>Victory Screenshot Uploaded!</span>
+                      </span>
                       <button
                         type="button"
                         onClick={() => {
@@ -292,22 +325,20 @@ export default function DepositPage() {
                           const fileInput = document.getElementById('proof') as HTMLInputElement;
                           if (fileInput) fileInput.value = '';
                         }}
-                        className="text-red-600 text-sm underline"
+                        className="text-red-600 text-sm underline font-bold"
                       >
-                        Remove
+                        🗑️ Remove
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
+                  <div className="space-y-3">
+                    <div className="w-16 h-16 mx-auto bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-2xl">📸</span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">Upload payment screenshot</p>
-                      <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                      <p className="text-lg font-bold text-gray-800">Upload Payment Proof</p>
+                      <p className="text-sm text-purple-600 font-semibold">PNG, JPG up to 5MB</p>
                     </div>
                   </div>
                 )}
@@ -322,9 +353,9 @@ export default function DepositPage() {
                 {!previewUrl && (
                   <label
                     htmlFor="proof"
-                    className="mt-3 inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg cursor-pointer transition-colors"
+                    className="mt-3 inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white text-sm font-bold rounded-lg cursor-pointer transition-all duration-300 hover:shadow-lg"
                   >
-                    Choose File
+                    📂 Choose Battle Proof
                   </label>
                 )}
               </div>
@@ -335,38 +366,59 @@ export default function DepositPage() {
           <button
             type="submit"
             disabled={loading || !amount || !proofFile}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white text-lg font-semibold py-4 rounded-xl transition-all duration-200 active:scale-95 disabled:active:scale-100"
+            className="game-button w-full text-lg font-bold rounded-xl py-4 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Processing...</span>
-              </div>
+              <>
+                <span className="animate-spin">⏳</span>
+                <span>Processing Battle Fund...</span>
+              </>
             ) : (
-              '🚀 Submit Deposit Request'
+              <>
+                <span>🚀</span>
+                <span>Submit Deposit Request</span>
+              </>
             )}
           </button>
         </form>
 
         {/* Instructions */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div className="game-card p-6 bg-gradient-to-r from-blue-100 to-purple-100">
           <div className="flex items-start space-x-3">
-            <span className="text-2xl">📋</span>
+            <span className="text-3xl">📋</span>
             <div>
-              <h3 className="font-semibold text-blue-900 mb-2">How to Add Coins</h3>
-              <div className="space-y-1 text-sm text-blue-800">
-                <p>1. Pay ₹{amount || 'X'} to ludo@paytm</p>
-                <p>2. Take screenshot of payment</p>
-                <p>3. Upload screenshot above</p>
-                <p>4. Submit & wait for admin approval</p>
+              <h3 className="font-bold text-blue-900 mb-3 flex items-center space-x-2">
+                <span>⚡</span>
+                <span>Battle Fund Guide</span>
+              </h3>
+              <div className="space-y-2 text-sm text-blue-800">
+                <div className="flex items-center space-x-2">
+                  <span className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                  <p className="font-semibold">💳 Pay ₹{amount || 'X'} to ludo@paytm</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                  <p className="font-semibold">📸 Capture payment victory screenshot</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                  <p className="font-semibold">📤 Upload proof above</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">4</span>
+                  <p className="font-semibold">⏳ Await admin approval for coins</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Quick Links */}
-        <div className="bg-white rounded-xl shadow-sm p-4">
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Access</h3>
+        <div className="game-card p-4">
+          <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center space-x-2">
+            <span>⚡</span>
+            <span>Quick Arena Access</span>
+          </h3>
           <div className="grid grid-cols-2 gap-3">
             <Link
               href="/wallet/history"

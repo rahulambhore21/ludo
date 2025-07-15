@@ -7,6 +7,10 @@ export interface IUser extends mongoose.Document {
   balance: number;
   referralCode: string;
   referredBy?: mongoose.Types.ObjectId;
+  isBanned: boolean;
+  banReason?: string;
+  bannedBy?: mongoose.Types.ObjectId;
+  bannedAt?: Date;
   createdAt: Date;
 }
 
@@ -38,6 +42,20 @@ const UserSchema = new mongoose.Schema<IUser>({
   referredBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
+  },
+  isBanned: {
+    type: Boolean,
+    default: false,
+  },
+  banReason: {
+    type: String,
+  },
+  bannedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  bannedAt: {
+    type: Date,
   },
   createdAt: {
     type: Date,

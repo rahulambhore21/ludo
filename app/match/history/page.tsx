@@ -182,58 +182,99 @@ export default function MatchHistoryPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+        <div className="text-center">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-4 border-yellow-400 mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="dice-icon text-4xl">📜</div>
+            </div>
+          </div>
+          <p className="mt-4 text-white font-semibold text-lg">Loading battle chronicles...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}}>
+      {/* Floating decorative elements */}
+      <div className="fixed top-10 left-10 float-animation opacity-20">
+        <div className="text-6xl">📜</div>
+      </div>
+      <div className="fixed top-20 right-20 float-animation opacity-20" style={{animationDelay: '1s'}}>
+        <div className="text-5xl">🏆</div>
+      </div>
+      <div className="fixed bottom-20 left-20 float-animation opacity-20" style={{animationDelay: '2s'}}>
+        <div className="text-4xl">⚔️</div>
+      </div>
+
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Match History</h1>
-            <Link 
-              href="/dashboard"
-              className="text-indigo-600 hover:text-indigo-500 font-medium"
-            >
-              ← Back to Dashboard
+      <header className="sticky top-0 z-40 game-card m-2 rounded-xl">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            <Link href="/dashboard" className="flex items-center space-x-2 text-purple-600 hover:text-purple-800 transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="font-bold">Back to Arena</span>
             </Link>
+            
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm">📜</span>
+              </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Battle Chronicles</span>
+            </div>
+
+            <div className="bg-gradient-to-r from-green-400 to-green-600 text-white rounded-full px-3 py-1 text-sm font-bold flex items-center space-x-1">
+              <span className="coin-icon">💰</span>
+              <span>₹ {user.balance}</span>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <main className="px-4 py-6 space-y-6">
+        {/* Welcome Section */}
+        <div className="game-card p-6 text-center">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="dice-icon text-3xl">📜</div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Battle Chronicles</h1>
+              <p className="text-purple-600 font-semibold">Your legendary victories and defeats! ⚔️</p>
+            </div>
+          </div>
+        </div>
+
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-            <div className="bg-white shadow rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-500">Total Matches</h3>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalMatches}</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="game-card p-4 text-center bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+              <h3 className="text-sm font-bold opacity-90">Total Battles</h3>
+              <p className="text-2xl font-bold">{stats.totalMatches}</p>
             </div>
-            <div className="bg-white shadow rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-500">Won</h3>
-              <p className="text-2xl font-bold text-green-600">{stats.wonMatches}</p>
+            <div className="game-card p-4 text-center bg-gradient-to-br from-green-500 to-green-600 text-white">
+              <h3 className="text-sm font-bold opacity-90">🏆 Victories</h3>
+              <p className="text-2xl font-bold">{stats.wonMatches}</p>
             </div>
-            <div className="bg-white shadow rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-500">Lost</h3>
-              <p className="text-2xl font-bold text-red-600">{stats.lostMatches}</p>
+            <div className="game-card p-4 text-center bg-gradient-to-br from-red-500 to-red-600 text-white">
+              <h3 className="text-sm font-bold opacity-90">💀 Defeats</h3>
+              <p className="text-2xl font-bold">{stats.lostMatches}</p>
             </div>
-            <div className="bg-white shadow rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-500">Win Rate</h3>
-              <p className="text-2xl font-bold text-blue-600">
+            <div className="game-card p-4 text-center bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+              <h3 className="text-sm font-bold opacity-90">⚡ Win Rate</h3>
+              <p className="text-2xl font-bold">
                 {stats.totalMatches > 0 ? Math.round((stats.wonMatches / stats.totalMatches) * 100) : 0}%
               </p>
             </div>
-            <div className="bg-white shadow rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-500">Total Winnings</h3>
-              <p className="text-2xl font-bold text-green-600">+{stats.totalWinnings}</p>
+            <div className="game-card p-4 text-center bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
+              <h3 className="text-sm font-bold opacity-90">💰 Winnings</h3>
+              <p className="text-2xl font-bold">+{stats.totalWinnings}</p>
             </div>
-            <div className="bg-white shadow rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-500">Net Profit</h3>
-              <p className={`text-2xl font-bold ${stats.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="game-card p-4 text-center bg-gradient-to-br from-indigo-500 to-indigo-600 text-white">
+              <h3 className="text-sm font-bold opacity-90">📈 Net Profit</h3>
+              <p className="text-2xl font-bold">
                 {stats.netProfit >= 0 ? '+' : ''}{stats.netProfit}
               </p>
             </div>
