@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { refreshUserBalance } from '@/lib/userUtils';
+import { useWalletBalance } from '../../../lib/useWalletBalance';
 import { useNotifications } from '../../../contexts/NotificationContext';
 
 interface User {
@@ -15,7 +15,7 @@ interface User {
 }
 
 export default function CreateMatchPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser, refreshBalance } = useWalletBalance();
   const [entryFee, setEntryFee] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,7 @@ export default function CreateMatchPage() {
       console.error('Error parsing user data:', error);
       router.push('/auth/login');
     }
-  }, [router]);
+  }, [router, setUser]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,13 +91,8 @@ export default function CreateMatchPage() {
       setSuccess('Match created successfully! Waiting for opponent...');
       showToast('success', 'Match created successfully! 🎮 Waiting for opponent...');
       
-      // Update user balance in localStorage
-      const updatedUser = { ...user, balance: user.balance - fee };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      setUser(updatedUser);
-
       // Refresh user balance from server
-      await refreshUserBalance();
+      await refreshBalance();
 
       // Redirect to match page after a delay
       setTimeout(() => {

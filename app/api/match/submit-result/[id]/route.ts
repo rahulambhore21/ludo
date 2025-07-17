@@ -5,6 +5,7 @@ import Match from '@/models/Match';
 import User from '@/models/User';
 import Transaction from '@/models/Transaction';
 import { uploadToCloudinary } from '@/lib/cloudinary';
+import { createDisputeEntry } from '@/lib/securityUtils';
 import mongoose from 'mongoose';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -197,6 +198,58 @@ async function processMatchResults(match: any) {
       (match.player1Result === 'win' && match.player2Result === 'loss') ||
       (match.player1Result === 'loss' && match.player2Result === 'win')
     );
+
+    if (!resultsMatch) {
+      // Results conflict - mark as disputed and create dispute entries
+      await Match.findByIdAndUpdate(match._id, {
+        status: 'conflict',
+        updatedAt: new Date(),
+      });
+
+      // Create dispute tracker entries for both players
+      const conflictDescription = `Match result conflict: Player1 claims ${match.player1Result}, Player2 claims ${match.player2Result}`;
+      
+      // Track dispute for player1
+      await createDisputeEntry({
+        userId: match.player1.toString(),
+        type: 'conflict',
+        matchId: match._id.toString(),
+        description: `${conflictDescription} (Player1 perspective)`,
+        severity: 'medium',
+        evidence: {
+          screenshots: [match.player1Screenshot].filter(Boolean),
+          metadata: {
+            playerRole: 'player1',
+            claimedResult: match.player1Result,
+            opponentResult: match.player2Result,
+            matchEntryFee: match.entryFee,
+            roomCode: match.roomCode
+          }
+        }
+      });
+
+      // Track dispute for player2
+      await createDisputeEntry({
+        userId: match.player2.toString(),
+        type: 'conflict',
+        matchId: match._id.toString(),
+        description: `${conflictDescription} (Player2 perspective)`,
+        severity: 'medium',
+        evidence: {
+          screenshots: [match.player2Screenshot].filter(Boolean),
+          metadata: {
+            playerRole: 'player2',
+            claimedResult: match.player2Result,
+            opponentResult: match.player1Result,
+            matchEntryFee: match.entryFee,
+            roomCode: match.roomCode
+          }
+        }
+      });
+
+      console.log(`🚨 Match conflict detected: ${match._id} - Both players claim different results`);
+      return; // Don't process winnings, let admin resolve
+    }
 
     if (resultsMatch) {
       // Results are consistent, settle the match

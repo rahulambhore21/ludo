@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useNotifications } from '../../../contexts/NotificationContext';
+import { useWalletBalance } from '../../../lib/useWalletBalance';
 import CancelGameModal from '../../../components/CancelGameModal';
 
 interface Match {
@@ -58,7 +59,7 @@ interface MatchPageProps {
 
 export default function MatchPage({ params }: MatchPageProps) {
   const resolvedParams = use(params);
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser, refreshBalance } = useWalletBalance();
   const [match, setMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -164,6 +165,10 @@ export default function MatchPage({ params }: MatchPageProps) {
           localStorage.setItem('user', JSON.stringify(updatedUser));
           setUser(updatedUser);
         }
+        
+        // Always refresh balance from server after result submission
+        // This ensures accurate balance display even if match was auto-settled
+        await refreshBalance();
       } else {
         // Regular JSON request for loss
         const response = await fetch(`/api/match/submit-result/${match._id}`, {
@@ -186,6 +191,10 @@ export default function MatchPage({ params }: MatchPageProps) {
         
         // Refresh match data
         await fetchMatch();
+        
+        // Always refresh balance from server after result submission
+        // This ensures accurate balance display even if match was auto-settled
+        await refreshBalance();
       }
 
     } catch (err) {
@@ -224,6 +233,9 @@ export default function MatchPage({ params }: MatchPageProps) {
       const updatedUser = { ...user, balance: user.balance - match.entryFee };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       setUser(updatedUser);
+
+      // Refresh balance from server to ensure accuracy
+      await refreshBalance();
 
       // Refresh match data
       await fetchMatch();

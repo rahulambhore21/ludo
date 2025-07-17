@@ -101,7 +101,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       )}
 
       {/* Header */}
-      <header className="bg-white shadow-sm border-b lg:pl-64">
+      <header className="bg-white shadow-sm border-b">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
@@ -127,7 +127,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
               </span>
               <button
                 onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm transition-colors"
+                className="bg-red-700 hover:bg-red-800 text-white px-2 py-1 sm:px-4 sm:py-2 rounded-md text-xs sm:text-sm"
               >
                 Logout
               </button>
@@ -143,8 +143,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           lg:translate-x-0 fixed lg:relative inset-y-0 left-0 z-50 w-64 bg-white shadow-lg 
           transform transition-transform duration-300 ease-in-out lg:h-screen
         `}>
-          <div className="p-4 pt-20 lg:pt-4 h-full overflow-y-auto">
-            
+          <div className="p-4 pt-16 lg:pt-4 h-full overflow-y-auto">
             {/* Platform Overview */}
             <div className="mb-6">
               <h4 className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Overview</h4>
@@ -152,7 +151,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
                   <span className="mr-3">📊</span>
                   Dashboard
@@ -160,7 +159,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin/reports"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
                   <span className="mr-3">📈</span>
                   Analytics & Reports
@@ -175,7 +174,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin/transactions"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
                   <span className="mr-3">💰</span>
                   Transactions
@@ -183,7 +182,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin/wallet-management"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
                   <span className="mr-3">💳</span>
                   Wallet Management
@@ -191,7 +190,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin/refunds"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
                   <span className="mr-3">💸</span>
                   Refunds
@@ -206,7 +205,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin/matches"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
                   <span className="mr-3">⚔️</span>
                   Active Matches
@@ -214,15 +213,15 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin/cancel-requests"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
-                  <span className="mr-3">🚫</span>
+                  <span className="mr-3">�</span>
                   Cancel Requests
                 </Link>
                 <Link
                   href="/admin/match-override"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
                   <span className="mr-3">⚖️</span>
                   Match Override
@@ -230,9 +229,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin/screenshot-reviewer"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
-                  <span className="mr-3">📷</span>
+                  <span className="mr-3">�</span>
                   Screenshot Review
                 </Link>
               </div>
@@ -245,7 +244,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin/users"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
                   <span className="mr-3">👥</span>
                   All Users
@@ -253,9 +252,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin/user-bans"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
-                  <span className="mr-3">🚫</span>
+                  <span className="mr-3">�</span>
                   User Bans
                 </Link>
               </div>
@@ -268,29 +267,29 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin/disputes"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors flex items-center"
                 >
                   <span className="mr-3">⚠️</span>
-                  <span className="flex-1">Dispute Tracking</span>
-                  <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                  Dispute Tracking
+                  <span className="ml-auto bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
                     New
                   </span>
                 </Link>
                 <Link
                   href="/admin/wallet-audits"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-700 rounded-md transition-colors flex items-center"
                 >
-                  <span className="mr-3">🔐</span>
-                  <span className="flex-1">Wallet Audits</span>
-                  <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                  <span className="mr-3">�</span>
+                  Wallet Audits
+                  <span className="ml-auto bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
                     New
                   </span>
                 </Link>
                 <Link
                   href="/admin/action-logs"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
                   <span className="mr-3">📝</span>
                   Action Logs
@@ -298,7 +297,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin/monitoring"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
                   <span className="mr-3">🔔</span>
                   Platform Monitoring
@@ -313,9 +312,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 <Link
                   href="/admin/maintenance"
                   onClick={() => setSidebarOpen(false)}
-                  className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors"
+                  className="block px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-md transition-colors flex items-center"
                 >
-                  <span className="mr-3">🔧</span>
+                  <span className="mr-3">�</span>
                   Maintenance Mode
                 </Link>
               </div>
@@ -325,7 +324,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
               <Link
                 href="/dashboard"
                 onClick={() => setSidebarOpen(false)}
-                className="flex items-center px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-md transition-colors"
+                className="block px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-md transition-colors flex items-center"
               >
                 <span className="mr-3">←</span>
                 Back to User Dashboard
@@ -335,10 +334,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 lg:ml-0">
-          <div className="p-4 sm:p-6">
-            {children}
-          </div>
+        <main className="flex-1 p-4 sm:p-6 lg:ml-0">
+          {children}
         </main>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import NotificationBell from '../../components/NotificationBell';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { useWalletBalance } from '../../lib/useWalletBalance';
 
 interface User {
   id: string;
@@ -29,7 +30,6 @@ interface Match {
 }
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState<Match[]>([]);
   const [matchesLoading, setMatchesLoading] = useState(true);
@@ -37,6 +37,7 @@ export default function DashboardPage() {
   const [joiningMatch, setJoiningMatch] = useState<string | null>(null);
   const router = useRouter();
   const { showToast } = useNotifications();
+  const { user, setUser, refreshBalance } = useWalletBalance();
 
   useEffect(() => {
     // Check if user is authenticated
@@ -112,6 +113,10 @@ export default function DashboardPage() {
 
       if (response.ok) {
         showToast('success', 'Successfully joined the match! 🎮');
+        
+        // Refresh user balance immediately to reflect the deduction
+        await refreshBalance();
+        
         router.push(`/match/${matchId}`);
       } else {
         showToast('error', data.error || 'Failed to join match');

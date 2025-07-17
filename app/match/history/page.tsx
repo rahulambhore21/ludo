@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useWalletBalance } from '../../../lib/useWalletBalance';
+import { useNotifications } from '../../../contexts/NotificationContext';
 
 interface Match {
   _id: string;
@@ -48,7 +50,7 @@ interface MatchStats {
 }
 
 export default function MatchHistoryPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser, refreshBalance } = useWalletBalance();
   const [matches, setMatches] = useState<Match[]>([]);
   const [stats, setStats] = useState<MatchStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -128,9 +130,8 @@ export default function MatchHistoryPage() {
 
       // Update user balance if won
       if (result === 'win' && data.winnings) {
-        const updatedUser = { ...user, balance: user.balance + data.winnings };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setUser(updatedUser);
+        // Refresh balance from server to ensure consistency
+        await refreshBalance();
       }
 
     } catch (err) {

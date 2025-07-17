@@ -4,6 +4,7 @@ import dbConnect from '@/lib/mongodb';
 import CancelRequest from '@/models/CancelRequest';
 import Match from '@/models/Match';
 import { uploadToCloudinary } from '@/lib/cloudinary';
+import { createDisputeEntry } from '@/lib/securityUtils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -111,8 +112,36 @@ export async function POST(request: NextRequest) {
 
     await cancelRequest.save();
 
-    // TODO: Send notification to admins about new cancel request
-    // You can implement this using your notification system
+    // Create dispute tracker entry for cancel request
+    const severityMap: { [key: string]: 'low' | 'medium' | 'high' } = {
+      'opponent_not_responding': 'low',
+      'technical_issues': 'low',
+      'game_crashed': 'low',
+      'unfair_play': 'high',
+      'personal_emergency': 'low',
+      'other': 'medium'
+    };
+
+    await createDisputeEntry({
+      userId: authUser.userId,
+      type: 'cancel_request',
+      matchId: matchId,
+      description: `Match cancellation requested: ${reason}`,
+      severity: severityMap[reason] || 'medium',
+      evidence: {
+        screenshots: [screenshotUrl],
+        metadata: {
+          reason: reason,
+          matchEntryFee: match.entryFee,
+          roomCode: match.roomCode,
+          matchStatus: match.status,
+          requestId: cancelRequest._id
+        }
+      },
+      request
+    });
+
+    console.log(`📝 Cancel request submitted: ${matchId} by user ${authUser.userId} - Reason: ${reason}`);
 
     return NextResponse.json({
       message: 'Cancel request submitted successfully',

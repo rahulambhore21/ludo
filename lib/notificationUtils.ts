@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 
 interface CreateNotificationData {
   userId: string;
-  type: 'match_result' | 'referral_bonus' | 'wallet_update' | 'match_joined';
+  type: 'match_result' | 'referral_bonus' | 'wallet_update' | 'match_joined' | 'admin_action' | 'security_alert';
   title: string;
   message: string;
   data?: {
@@ -12,6 +12,12 @@ interface CreateNotificationData {
     amount?: number;
     transactionId?: string;
     referralUserId?: string;
+    actionType?: string;
+    auditId?: string;
+    riskScore?: number;
+    reason?: string;
+    alertType?: string;
+    details?: string;
   };
 }
 
@@ -135,5 +141,85 @@ export async function createMatchJoinedNotification(
     title: '🎮 Someone Joined Your Match!',
     message: `${joinerName} joined your ₹${entryFee} match. Game is starting!`,
     data: { matchId, amount: entryFee }
+  });
+}
+
+/**
+ * Create admin action notification
+ */
+export async function createAdminActionNotification(
+  userId: string,
+  actionType: 'refund_approved' | 'refund_rejected' | 'account_warned' | 'account_suspended',
+  amount?: number,
+  reason?: string
+) {
+  let title = '';
+  let message = '';
+
+  switch (actionType) {
+    case 'refund_approved':
+      title = '✅ Refund Approved';
+      message = `Your refund of ₹${amount} has been approved by admin!`;
+      break;
+    case 'refund_rejected':
+      title = '❌ Refund Rejected';
+      message = `Your refund request was rejected. Reason: ${reason || 'Contact support for details'}`;
+      break;
+    case 'account_warned':
+      title = '⚠️ Account Warning';
+      message = `Your account has been warned. Reason: ${reason || 'Violation of terms'}`;
+      break;
+    case 'account_suspended':
+      title = '🚫 Account Suspended';
+      message = `Your account has been suspended. Reason: ${reason || 'Contact support'}`;
+      break;
+  }
+
+  return createNotification({
+    userId,
+    type: 'admin_action',
+    title,
+    message,
+    data: { actionType, amount, reason }
+  });
+}
+
+/**
+ * Create security alert notification
+ */
+export async function createSecurityAlertNotification(
+  userId: string,
+  alertType: 'suspicious_transaction' | 'multiple_disputes' | 'high_risk_behavior' | 'unusual_activity',
+  details: string,
+  riskScore?: number
+) {
+  let title = '';
+  let message = '';
+
+  switch (alertType) {
+    case 'suspicious_transaction':
+      title = '🔒 Security Alert - Transaction';
+      message = `Suspicious transaction detected: ${details}`;
+      break;
+    case 'multiple_disputes':
+      title = '⚠️ Security Alert - Disputes';
+      message = `Multiple disputes detected on your account: ${details}`;
+      break;
+    case 'high_risk_behavior':
+      title = '🚨 Security Alert - High Risk';
+      message = `High risk behavior pattern detected: ${details}`;
+      break;
+    case 'unusual_activity':
+      title = '👀 Security Alert - Activity';
+      message = `Unusual activity detected: ${details}`;
+      break;
+  }
+
+  return createNotification({
+    userId,
+    type: 'security_alert',
+    title,
+    message,
+    data: { alertType, riskScore, details }
   });
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { refreshUserBalance, updateUserInStorage } from '@/lib/userUtils';
+import { useWalletBalance } from '../../../lib/useWalletBalance';
 import { useNotifications } from '../../../contexts/NotificationContext';
 
 interface User {
@@ -15,7 +15,7 @@ interface User {
 }
 
 export default function WithdrawPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser, refreshBalance } = useWalletBalance();
   const [amount, setAmount] = useState('');
   const [upiId, setUpiId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,7 @@ export default function WithdrawPage() {
       console.error('Error parsing user data:', error);
       router.push('/auth/login');
     }
-  }, [router]);
+  }, [router, setUser]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,10 +89,7 @@ export default function WithdrawPage() {
       setUpiId('');
 
       // Refresh user balance immediately
-      const balanceData = await refreshUserBalance();
-      if (balanceData) {
-        setUser(prev => prev ? { ...prev, balance: balanceData.balance } : null);
-      }
+      await refreshBalance();
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

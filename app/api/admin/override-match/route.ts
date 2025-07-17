@@ -64,10 +64,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Start transaction
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
+    // Process without transaction (for standalone MongoDB)
     try {
       let newStatus = 'completed';
       let winnerUser = null;
@@ -78,15 +75,13 @@ export async function POST(request: NextRequest) {
         if (match.player1) {
           await User.findByIdAndUpdate(
             match.player1._id,
-            { $inc: { balance: match.amount } },
-            { session }
+            { $inc: { balance: match.amount } }
           );
         }
         if (match.player2) {
           await User.findByIdAndUpdate(
             match.player2._id,
-            { $inc: { balance: match.amount } },
-            { session }
+            { $inc: { balance: match.amount } }
           );
         }
         newStatus = 'cancelled';
@@ -109,8 +104,7 @@ export async function POST(request: NextRequest) {
         // Award winner (winner gets double the amount - their stake back + opponent's stake)
         await User.findByIdAndUpdate(
           winnerId,
-          { $inc: { balance: match.amount * 2 } },
-          { session }
+          { $inc: { balance: match.amount * 2 } }
         );
       }
 
@@ -125,7 +119,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
       };
 
-      await Match.findByIdAndUpdate(matchId, updateData, { session });
+      await Match.findByIdAndUpdate(matchId, updateData);
 
       // Log admin action
       await AdminAction.create([{
@@ -142,9 +136,7 @@ export async function POST(request: NextRequest) {
           player1: match.player1?._id,
           player2: match.player2?._id,
         }
-      }], { session });
-
-      await session.commitTransaction();
+      }]);
 
       return NextResponse.json({
         success: true,
@@ -152,10 +144,8 @@ export async function POST(request: NextRequest) {
       });
 
     } catch (error) {
-      await session.abortTransaction();
+      console.error('Override match processing error:', error);
       throw error;
-    } finally {
-      session.endSession();
     }
 
   } catch (error) {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { refreshUserBalance } from '@/lib/userUtils';
+import { useWalletBalance } from '../../../lib/useWalletBalance';
 import { useNotifications } from '../../../contexts/NotificationContext';
 
 interface User {
@@ -15,7 +15,7 @@ interface User {
 }
 
 export default function DepositPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser, refreshBalance } = useWalletBalance();
   const [amount, setAmount] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,7 +41,7 @@ export default function DepositPage() {
       console.error('Error parsing user data:', error);
       router.push('/auth/login');
     }
-  }, [router]);
+  }, [router, setUser]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,7 +115,7 @@ export default function DepositPage() {
       if (fileInput) fileInput.value = '';
 
       // Refresh user balance
-      refreshUserBalance();
+      refreshBalance();
       showToast('success', 'Deposit request submitted successfully! 💰');
 
     } catch (err) {

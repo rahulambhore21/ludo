@@ -54,45 +54,39 @@ export async function POST(
       );
     }
 
-    // Start a session for transaction
-    const session = await mongoose.startSession();
-    
+    // Update cancel request status without transaction (for standalone MongoDB)
     try {
-      await session.withTransaction(async () => {
-        // Update cancel request status
-        cancelRequest.status = action === 'approve' ? 'approved' : 'rejected';
-        cancelRequest.reviewedBy = adminUser.userId;
-        cancelRequest.reviewNote = note || '';
-        await cancelRequest.save({ session });
+      // Update cancel request status
+      cancelRequest.status = action === 'approve' ? 'approved' : 'rejected';
+      cancelRequest.reviewedBy = adminUser.userId;
+      cancelRequest.reviewNote = note || '';
+      await cancelRequest.save();
 
-        if (action === 'approve') {
-          // If approved, cancel the match and refund entry fees
-          const match = await Match.findById(cancelRequest.matchId._id).session(session);
-          
-          if (match && match.status !== 'completed') {
-            // Update match status to cancelled
-            match.status = 'cancelled';
-            await match.save({ session });
+      if (action === 'approve') {
+        // If approved, cancel the match and refund entry fees
+        const match = await Match.findById(cancelRequest.matchId._id);
+        
+        if (match && match.status !== 'completed') {
+          // Update match status to cancelled
+          match.status = 'cancelled';
+          await match.save();
 
-            // Refund entry fees to both players
-            if (match.player1) {
-              await User.findByIdAndUpdate(
-                match.player1,
-                { $inc: { balance: match.entryFee } },
-                { session }
-              );
-            }
+          // Refund entry fees to both players
+          if (match.player1) {
+            await User.findByIdAndUpdate(
+              match.player1,
+              { $inc: { balance: match.entryFee } }
+            );
+          }
 
-            if (match.player2) {
-              await User.findByIdAndUpdate(
-                match.player2,
-                { $inc: { balance: match.entryFee } },
-                { session }
-              );
-            }
+          if (match.player2) {
+            await User.findByIdAndUpdate(
+              match.player2,
+              { $inc: { balance: match.entryFee } }
+            );
           }
         }
-      });
+      }
 
       return NextResponse.json({
         message: `Cancel request ${action}d successfully`,
@@ -104,8 +98,12 @@ export async function POST(
         },
       });
 
-    } finally {
-      await session.endSession();
+    } catch (transactionError) {
+      console.error(`Error processing cancel request ${action}:`, transactionError);
+      return NextResponse.json(
+        { error: `Failed to ${action} cancel request` },
+        { status: 500 }
+      );
     }
 
   } catch (error) {

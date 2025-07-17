@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 export interface INotification extends mongoose.Document {
   userId: mongoose.Types.ObjectId;
-  type: 'match_result' | 'referral_bonus' | 'wallet_update' | 'match_joined';
+  type: 'match_result' | 'referral_bonus' | 'wallet_update' | 'match_joined' | 'admin_action' | 'security_alert';
   title: string;
   message: string;
   data?: {
@@ -10,6 +10,12 @@ export interface INotification extends mongoose.Document {
     amount?: number;
     transactionId?: string;
     referralUserId?: string;
+    actionType?: string;
+    auditId?: string;
+    riskScore?: number;
+    reason?: string;
+    alertType?: string;
+    details?: string;
   };
   read: boolean;
   createdAt: Date;
@@ -23,7 +29,7 @@ const NotificationSchema = new mongoose.Schema<INotification>({
   },
   type: {
     type: String,
-    enum: ['match_result', 'referral_bonus', 'wallet_update', 'match_joined'],
+    enum: ['match_result', 'referral_bonus', 'wallet_update', 'match_joined', 'admin_action', 'security_alert'],
     required: true,
   },
   title: {
@@ -41,6 +47,12 @@ const NotificationSchema = new mongoose.Schema<INotification>({
     amount: Number,
     transactionId: String,
     referralUserId: String,
+    actionType: String,
+    auditId: String,
+    riskScore: Number,
+    reason: String,
+    alertType: String,
+    details: String,
   },
   read: {
     type: Boolean,

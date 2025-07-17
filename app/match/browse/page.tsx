@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { refreshUserBalance } from '@/lib/userUtils';
+import { useWalletBalance } from '../../../lib/useWalletBalance';
 
 interface Match {
   id: string;
@@ -28,7 +28,7 @@ interface User {
 }
 
 export default function BrowseMatchesPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser, refreshBalance } = useWalletBalance();
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -60,7 +60,7 @@ export default function BrowseMatchesPage() {
       console.error('Error parsing user data:', error);
       router.push('/auth/login');
     }
-  }, [router]);
+  }, [router, setUser]);
 
   const fetchMatches = async () => {
     try {
@@ -126,13 +126,8 @@ export default function BrowseMatchesPage() {
         throw new Error(data.error || 'Failed to join match');
       }
 
-      // Update user balance in localStorage
-      const updatedUser = { ...user, balance: user.balance - entryFee };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      setUser(updatedUser);
-
       // Refresh balance from server
-      await refreshUserBalance();
+      await refreshBalance();
 
       // Redirect to match page
       router.push(`/match/${matchId}`);

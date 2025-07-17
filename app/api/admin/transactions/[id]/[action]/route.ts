@@ -3,8 +3,9 @@ import { requireAdminAuth } from '@/lib/adminAuth';
 import dbConnect from '@/lib/mongodb';
 import Transaction from '@/models/Transaction';
 import User from '@/models/User';
+import Notification from '@/models/Notification';
 import mongoose from 'mongoose';
-import { createWalletUpdateNotification } from '@/lib/notificationUtils';
+import { secureBalanceUpdate } from '@/lib/securityUtils';
 
 export async function POST(
   request: NextRequest,
@@ -52,20 +53,53 @@ export async function POST(
       );
     }
 
+    // Get admin user info
+    const adminUser = await requireAdminAuth(request);
+
     // Process transaction (without MongoDB sessions for local development)
     if (action === 'approve') {
       // Approve transaction
       if (transaction.type === 'deposit') {
-        // Add coins to user balance
+        // Add coins to user balance with security audit
         if (transaction.userId) {
-          await User.findByIdAndUpdate(
-            transaction.userId,
-            { $inc: { balance: transaction.amount } }
-          );
+          await secureBalanceUpdate({
+            userId: transaction.userId.toString(),
+            amount: transaction.amount,
+            type: 'balance_change',
+            reason: `Deposit approved: ${note || 'Admin approved deposit'}`,
+            adminId: adminUser.userId,
+            transactionId: transactionId,
+            request,
+            metadata: {
+              transactionType: 'deposit_approval',
+              originalAmount: transaction.amount,
+              proofUrl: transaction.proofUrl
+            }
+          });
         }
       } else if (transaction.type === 'withdrawal') {
         // For withdrawals, coins are already deducted when request was made
         // Just update status to approved (money will be sent externally)
+        // Create audit for tracking
+        if (transaction.userId) {
+          const user = await User.findById(transaction.userId);
+          if (user) {
+            await secureBalanceUpdate({
+              userId: transaction.userId.toString(),
+              amount: 0, // No balance change, just audit
+              type: 'balance_change',
+              reason: `Withdrawal approved: ${note || 'Admin approved withdrawal'}`,
+              adminId: adminUser.userId,
+              transactionId: transactionId,
+              request,
+              metadata: {
+                transactionType: 'withdrawal_approval',
+                withdrawalAmount: transaction.amount,
+                upiId: transaction.upiId
+              }
+            });
+          }
+        }
       }
 
       // Update transaction status
@@ -80,28 +114,44 @@ export async function POST(
 
       // Send notification to user
       if (transaction.userId) {
-        try {
-          const notificationType = transaction.type === 'deposit' ? 'deposit_approved' : 'withdrawal_approved';
-          await createWalletUpdateNotification(
-            transaction.userId.toString(),
-            notificationType,
-            transaction.amount,
-            transactionId
-          );
-        } catch (notifError) {
-          console.error('Failed to send wallet notification:', notifError);
-        }
+        const notification = new Notification({
+          userId: transaction.userId,
+          type: 'wallet',
+          title: transaction.type === 'deposit' ? 'Deposit Approved!' : 'Withdrawal Approved!',
+          message: transaction.type === 'deposit' 
+            ? `Your deposit of ₹${transaction.amount} has been approved and added to your wallet.`
+            : `Your withdrawal request of ₹${transaction.amount} has been approved and will be processed shortly.`,
+          data: {
+            type: transaction.type === 'deposit' ? 'deposit_approved' : 'withdrawal_approved',
+            amount: transaction.amount,
+            transactionId: transactionId,
+            note: note
+          },
+          read: false,
+          createdAt: new Date()
+        });
+        await notification.save();
       }
 
     } else if (action === 'reject') {
       // Reject transaction
       if (transaction.type === 'withdrawal') {
-        // Return coins to user balance for rejected withdrawal
+        // Return coins to user balance for rejected withdrawal with security audit
         if (transaction.userId) {
-          await User.findByIdAndUpdate(
-            transaction.userId,
-            { $inc: { balance: transaction.amount } }
-          );
+          await secureBalanceUpdate({
+            userId: transaction.userId.toString(),
+            amount: transaction.amount,
+            type: 'refund',
+            reason: `Withdrawal rejected: ${note || 'Admin rejected withdrawal'}`,
+            adminId: adminUser.userId,
+            transactionId: transactionId,
+            request,
+            metadata: {
+              transactionType: 'withdrawal_rejection',
+              refundAmount: transaction.amount,
+              upiId: transaction.upiId
+            }
+          });
         }
       }
       // For deposits, no need to do anything as coins weren't added yet
@@ -118,17 +168,23 @@ export async function POST(
 
       // Send notification to user
       if (transaction.userId) {
-        try {
-          const notificationType = transaction.type === 'deposit' ? 'deposit_rejected' : 'withdrawal_rejected';
-          await createWalletUpdateNotification(
-            transaction.userId.toString(),
-            notificationType,
-            transaction.amount,
-            transactionId
-          );
-        } catch (notifError) {
-          console.error('Failed to send wallet notification:', notifError);
-        }
+        const notification = new Notification({
+          userId: transaction.userId,
+          type: 'wallet',
+          title: transaction.type === 'deposit' ? 'Deposit Rejected' : 'Withdrawal Rejected',
+          message: transaction.type === 'deposit' 
+            ? `Your deposit request of ₹${transaction.amount} has been rejected. Reason: ${note || 'No reason provided'}`
+            : `Your withdrawal request of ₹${transaction.amount} has been rejected and the amount has been refunded to your wallet. Reason: ${note || 'No reason provided'}`,
+          data: {
+            type: transaction.type === 'deposit' ? 'deposit_rejected' : 'withdrawal_rejected',
+            amount: transaction.amount,
+            transactionId: transactionId,
+            note: note
+          },
+          read: false,
+          createdAt: new Date()
+        });
+        await notification.save();
       }
     }
 

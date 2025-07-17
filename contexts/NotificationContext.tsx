@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { updateUserBalance } from '../lib/useWalletBalance';
 
 interface Notification {
   _id: string;
@@ -25,6 +26,8 @@ interface NotificationContextType {
   markAsRead: (notificationIds?: string[]) => Promise<void>;
   showToast: (type: 'success' | 'error' | 'info', message: string) => void;
   refreshNotifications: () => void;
+  onBalanceUpdate: (callback: (user: any) => void) => void;
+  triggerBalanceUpdate: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -32,6 +35,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [balanceUpdateCallbacks, setBalanceUpdateCallbacks] = useState<((user: any) => void)[]>([]);
 
   const fetchNotifications = async () => {
     try {
@@ -46,6 +50,38 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
       if (response.ok) {
         const data = await response.json();
+        
+        // Check for new wallet-related notifications
+        const newWalletNotifications = data.notifications.filter((notif: Notification) => 
+          !notif.read && 
+          (notif.type === 'wallet_update' || 
+           notif.message?.includes('deposit') || 
+           notif.message?.includes('withdrawal') ||
+           notif.message?.includes('approved') ||
+           notif.message?.includes('rejected'))
+        );
+
+        // If there are new wallet notifications, refresh user balance
+        if (newWalletNotifications.length > 0) {
+          try {
+            const updatedUser = await updateUserBalance();
+            console.log('💰 Wallet balance refreshed due to new notifications');
+            
+            // Trigger all registered callbacks with the updated user data
+            if (updatedUser) {
+              balanceUpdateCallbacks.forEach(callback => {
+                try {
+                  callback(updatedUser);
+                } catch (error) {
+                  console.error('Error in balance update callback:', error);
+                }
+              });
+            }
+          } catch (error) {
+            console.error('Failed to refresh wallet balance:', error);
+          }
+        }
+        
         setNotifications(data.notifications);
         setUnreadCount(data.unreadCount);
       }
@@ -144,6 +180,27 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     fetchNotifications();
   };
 
+  const onBalanceUpdate = (callback: (user: any) => void) => {
+    setBalanceUpdateCallbacks(prev => [...prev, callback]);
+  };
+
+  const triggerBalanceUpdate = async () => {
+    try {
+      const updatedUser = await updateUserBalance();
+      if (updatedUser) {
+        balanceUpdateCallbacks.forEach(callback => {
+          try {
+            callback(updatedUser);
+          } catch (error) {
+            console.error('Error in balance update callback:', error);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to trigger balance update:', error);
+    }
+  };
+
   // Fetch notifications on mount and set up polling
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -164,6 +221,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       markAsRead,
       showToast,
       refreshNotifications,
+      onBalanceUpdate,
+      triggerBalanceUpdate,
     }}>
       {children}
     </NotificationContext.Provider>

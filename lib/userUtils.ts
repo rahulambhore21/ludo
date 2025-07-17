@@ -1,6 +1,6 @@
 // Utility functions for user balance and data management
 
-export const refreshUserBalance = async (): Promise<{ balance: number } | null> => {
+export const refreshUserBalance = async (): Promise<any | null> => {
   try {
     const token = localStorage.getItem('authToken');
     if (!token) return null;
@@ -18,9 +18,10 @@ export const refreshUserBalance = async (): Promise<{ balance: number } | null> 
     // Update localStorage with fresh user data
     if (data.user) {
       localStorage.setItem('user', JSON.stringify(data.user));
+      return data.user; // Return the full user object
     }
     
-    return { balance: data.user.balance };
+    return null;
   } catch (error) {
     console.error('Error refreshing user balance:', error);
     return null;
@@ -50,4 +51,13 @@ export const updateUserInStorage = (updatedFields: Partial<any>) => {
     console.error('Error updating user in storage:', error);
     return null;
   }
+};
+
+// Enhanced function that immediately updates both localStorage and component state
+export const syncUserBalance = async (setUserCallback?: (user: any) => void): Promise<any | null> => {
+  const freshUser = await refreshUserBalance();
+  if (freshUser && setUserCallback) {
+    setUserCallback(freshUser);
+  }
+  return freshUser;
 };

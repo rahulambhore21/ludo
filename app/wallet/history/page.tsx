@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useWalletBalance } from '../../../lib/useWalletBalance';
 
 interface Transaction {
   _id: string;
@@ -24,7 +25,7 @@ interface User {
 }
 
 export default function WalletHistoryPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser } = useWalletBalance();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -47,7 +48,7 @@ export default function WalletHistoryPage() {
       console.error('Error parsing user data:', error);
       router.push('/auth/login');
     }
-  }, [router]);
+  }, [router, setUser]);
 
   const fetchTransactions = async () => {
     try {
