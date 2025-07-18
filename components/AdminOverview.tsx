@@ -162,42 +162,42 @@ export default function AdminOverview({ stats }: AdminOverviewProps) {
       )}
 
       {/* Quick Stats Overview */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Platform Overview</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.totalUsers?.toLocaleString()}</div>
-            <div className="text-sm text-gray-600">Total Users</div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">{stats.totalUsers?.toLocaleString()}</div>
+            <div className="text-xs sm:text-sm text-gray-600">Total Users</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">₹{stats.totalCoinsInSystem?.toLocaleString()}</div>
-            <div className="text-sm text-gray-600">Coins in System</div>
+            <div className="text-xl sm:text-2xl font-bold text-green-600">₹{stats.totalCoinsInSystem?.toLocaleString()}</div>
+            <div className="text-xs sm:text-sm text-gray-600">Coins in System</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">₹{stats.totalPlatformEarnings?.toLocaleString()}</div>
-            <div className="text-sm text-gray-600">Platform Earnings</div>
+            <div className="text-xl sm:text-2xl font-bold text-purple-600">₹{stats.totalPlatformEarnings?.toLocaleString()}</div>
+            <div className="text-xs sm:text-sm text-gray-600">Platform Earnings</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-orange-600">{stats.transactionsToday}</div>
-            <div className="text-sm text-gray-600">Today's Transactions</div>
+            <div className="text-xl sm:text-2xl font-bold text-orange-600">{stats.transactionsToday}</div>
+            <div className="text-xs sm:text-sm text-gray-600">Today's Transactions</div>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <Link
             href="/admin/transactions"
-            className="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <div className="bg-yellow-100 rounded-lg p-2 mr-3">
-              <span className="text-xl">💰</span>
+            <div className="bg-yellow-100 rounded-lg p-2 mr-3 flex-shrink-0">
+              <span className="text-lg sm:text-xl">💰</span>
             </div>
-            <div>
-              <div className="font-medium">Review Transactions</div>
-              <div className="text-sm text-gray-600">
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-sm sm:text-base truncate">Review Transactions</div>
+              <div className="text-xs sm:text-sm text-gray-600">
                 {((stats.pendingDeposits || 0) + (stats.pendingWithdrawals || 0))} pending
               </div>
             </div>
@@ -205,14 +205,14 @@ export default function AdminOverview({ stats }: AdminOverviewProps) {
 
           <Link
             href="/admin/disputes"
-            className="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <div className="bg-red-100 rounded-lg p-2 mr-3">
-              <span className="text-xl">⚠️</span>
+            <div className="bg-red-100 rounded-lg p-2 mr-3 flex-shrink-0">
+              <span className="text-lg sm:text-xl">⚠️</span>
             </div>
-            <div>
-              <div className="font-medium">Resolve Disputes</div>
-              <div className="text-sm text-gray-600">
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-sm sm:text-base truncate">Resolve Disputes</div>
+              <div className="text-xs sm:text-sm text-gray-600">
                 {stats.conflictsPending || 0} active conflicts
               </div>
             </div>
@@ -220,66 +220,66 @@ export default function AdminOverview({ stats }: AdminOverviewProps) {
 
           <Link
             href="/admin/wallet-audits"
-            className="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <div className="bg-purple-100 rounded-lg p-2 mr-3">
-              <span className="text-xl">🔐</span>
+            <div className="bg-purple-100 rounded-lg p-2 mr-3 flex-shrink-0">
+              <span className="text-lg sm:text-xl">🔐</span>
             </div>
-            <div>
-              <div className="font-medium">Security Audits</div>
-              <div className="text-sm text-gray-600">Monitor fraud detection</div>
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-sm sm:text-base truncate">Security Audits</div>
+              <div className="text-xs sm:text-sm text-gray-600">Monitor fraud detection</div>
             </div>
           </Link>
 
           <Link
             href="/admin/users"
-            className="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <div className="bg-blue-100 rounded-lg p-2 mr-3">
-              <span className="text-xl">👥</span>
+            <div className="bg-blue-100 rounded-lg p-2 mr-3 flex-shrink-0">
+              <span className="text-lg sm:text-xl">👥</span>
             </div>
-            <div>
-              <div className="font-medium">Manage Users</div>
-              <div className="text-sm text-gray-600">{stats.totalUsers} registered users</div>
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-sm sm:text-base truncate">Manage Users</div>
+              <div className="text-xs sm:text-sm text-gray-600">{stats.totalUsers} registered users</div>
             </div>
           </Link>
 
           <Link
             href="/admin/matches"
-            className="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <div className="bg-green-100 rounded-lg p-2 mr-3">
-              <span className="text-xl">⚔️</span>
+            <div className="bg-green-100 rounded-lg p-2 mr-3 flex-shrink-0">
+              <span className="text-lg sm:text-xl">⚔️</span>
             </div>
-            <div>
-              <div className="font-medium">Active Matches</div>
-              <div className="text-sm text-gray-600">Monitor ongoing games</div>
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-sm sm:text-base truncate">Active Matches</div>
+              <div className="text-xs sm:text-sm text-gray-600">Monitor ongoing games</div>
             </div>
           </Link>
 
           <Link
             href="/admin/reports"
-            className="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors"
           >
-            <div className="bg-indigo-100 rounded-lg p-2 mr-3">
-              <span className="text-xl">📊</span>
+            <div className="bg-indigo-100 rounded-lg p-2 mr-3 flex-shrink-0">
+              <span className="text-lg sm:text-xl">📊</span>
             </div>
-            <div>
-              <div className="font-medium">View Reports</div>
-              <div className="text-sm text-gray-600">Detailed analytics</div>
+            <div className="min-w-0 flex-1">
+              <div className="font-medium text-sm sm:text-base truncate">View Reports</div>
+              <div className="text-xs sm:text-sm text-gray-600">Detailed analytics</div>
             </div>
           </Link>
         </div>
       </div>
 
       {/* Recent Activity Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Financial Status</h3>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Pending Deposits</span>
-              <span className={`px-2 py-1 rounded-full text-sm ${
+              <span className="text-sm sm:text-base text-gray-600">Pending Deposits</span>
+              <span className={`px-2 py-1 rounded-full text-xs sm:text-sm ${
                 (stats.pendingDeposits || 0) > 0 
                   ? 'bg-red-100 text-red-800' 
                   : 'bg-green-100 text-green-800'
@@ -288,8 +288,8 @@ export default function AdminOverview({ stats }: AdminOverviewProps) {
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Pending Withdrawals</span>
-              <span className={`px-2 py-1 rounded-full text-sm ${
+              <span className="text-sm sm:text-base text-gray-600">Pending Withdrawals</span>
+              <span className={`px-2 py-1 rounded-full text-xs sm:text-sm ${
                 (stats.pendingWithdrawals || 0) > 0 
                   ? 'bg-red-100 text-red-800' 
                   : 'bg-green-100 text-green-800'
@@ -298,26 +298,26 @@ export default function AdminOverview({ stats }: AdminOverviewProps) {
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Today's Volume</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-sm sm:text-base text-gray-600">Today's Volume</span>
+              <span className="font-semibold text-gray-900 text-sm sm:text-base">
                 {stats.transactionsToday || 0} transactions
               </span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">System Health</h3>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Platform Status</span>
-              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
+              <span className="text-sm sm:text-base text-gray-600">Platform Status</span>
+              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs sm:text-sm">
                 Online
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Active Conflicts</span>
-              <span className={`px-2 py-1 rounded-full text-sm ${
+              <span className="text-sm sm:text-base text-gray-600">Active Conflicts</span>
+              <span className={`px-2 py-1 rounded-full text-xs sm:text-sm ${
                 (stats.conflictsPending || 0) > 0 
                   ? 'bg-red-100 text-red-800' 
                   : 'bg-green-100 text-green-800'
@@ -326,8 +326,8 @@ export default function AdminOverview({ stats }: AdminOverviewProps) {
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Security Status</span>
-              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
+              <span className="text-sm sm:text-base text-gray-600">Security Status</span>
+              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs sm:text-sm">
                 Protected
               </span>
             </div>

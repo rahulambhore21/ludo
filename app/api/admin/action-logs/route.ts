@@ -1,19 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/adminAuth';
 import dbConnect from '@/lib/mongodb';
-import mongoose from 'mongoose';
-
-// Admin Action Log Schema (reuse from override-match)
-const AdminActionSchema = new mongoose.Schema({
-  adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  action: { type: String, required: true },
-  targetType: { type: String, required: true },
-  targetId: { type: mongoose.Schema.Types.ObjectId, required: true },
-  details: mongoose.Schema.Types.Mixed,
-  timestamp: { type: Date, default: Date.now },
-});
-
-const AdminAction = mongoose.models.AdminAction || mongoose.model('AdminAction', AdminActionSchema);
+import { AdminAction } from '@/lib/adminActionLogger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -85,31 +73,5 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to get admin action logs' },
       { status: 500 }
     );
-  }
-}
-
-// Helper function to log admin actions (can be used by other endpoints)
-export async function logAdminAction(
-  adminId: string,
-  action: string,
-  targetType: string,
-  targetId: string,
-  details: any = {}
-) {
-  try {
-    await dbConnect();
-    
-    await AdminAction.create({
-      adminId,
-      action,
-      targetType,
-      targetId,
-      details,
-      timestamp: new Date(),
-    });
-    
-    console.log(`Admin action logged: ${action} by ${adminId} on ${targetType}:${targetId}`);
-  } catch (error) {
-    console.error('Failed to log admin action:', error);
   }
 }
